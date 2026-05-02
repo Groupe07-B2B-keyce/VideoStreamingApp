@@ -1,0 +1,481 @@
+tags:
+  - name: Catalog
+    description: "Gestion du catalogue de titres (Films, Séries, Documentaires)"
+  - name: Genres
+    description: "Gestion des genres"
+  - name: Collections
+    description: "Gestion des collections et franchises"
+  - name: Persons
+    description: "Gestion des personnes (Acteurs, Réalisateurs)"
+
+paths:
+
+  # ==============================================================
+  # TITLES (Collection)
+  # ==============================================================
+  /titles:
+    get:
+      tags:
+        - Catalog
+      summary: "Lister le catalogue de titres"
+      operationId: listTitles
+      description: "Retourne la liste paginée de tous les titres publiés, avec des filtres avancés par genre, type, année, etc."
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
+        - name: type
+          in: query
+          description: "Filtrer par type de contenu"
+          schema:
+            type: string
+            enum: [MOVIE, SERIES, DOCUMENTARY, MINI_SERIES, STAND_UP]
+        - name: genreId
+          in: query
+          description: "Filtrer par identifiant de genre"
+          schema:
+            type: string
+            format: uuid
+        - name: releaseYear
+          in: query
+          description: "Filtrer par année de sortie"
+          schema:
+            type: integer
+        - name: rating
+          in: query
+          description: "Filtrer par classification d'âge"
+          schema:
+            type: string
+            enum: [G, PG, PG13, R, NC17, TV_MA, TV_14, TV_PG, TV_G]
+        - name: accessType
+          in: query
+          description: "Filtrer par type d'accès"
+          schema:
+            type: string
+            enum: [INCLUDED, RENT, BUY, CHANNEL_SUBSCRIPTION]
+        - name: sort
+          in: query
+          description: "Trier les résultats"
+          schema:
+            type: string
+            enum: [releaseYear_desc, releaseYear_asc, imdbRating_desc, title_asc]
+            default: "imdbRating_desc"
+        - name: q
+          in: query
+          description: "Recherche textuelle sur le titre"
+          schema:
+            type: string
+            example: "Batman"
+      responses:
+        '200':
+          description: "Catalogue récupéré avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Cache-Control:
+              description: "Directive de mise en cache"
+              schema:
+                type: string
+                example: "public, max-age=300"
+            ETag:
+              description: "Identifiant de version de la ressource"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../components/schemas/catalog.yaml#/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../components/schemas/catalog.yaml#/TitleSummary'
+              example:
+                meta:
+                  totalItems: 450
+                  totalPages: 23
+                  currentPage: 1
+                  itemsPerPage: 20
+                data:
+                  - id: "550e8400-e29b-41d4-a716-446655440001"
+                    originalTitle: "Oppenheimer"
+                    type: "MOVIE"
+                    rating: "R"
+                    releaseYear: 2023
+                    posterUrl: "https://cdn.primevideo.com/titles/oppenheimer/poster.jpg"
+                    imdbRating: 8.3
+                    accessInfo:
+                      accessType: "INCLUDED"
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # TITLES (Instance)
+  # ==============================================================
+  /titles/{titleId}:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        description: "Identifiant unique du titre"
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Catalog
+      summary: "Obtenir les détails complets d'un titre"
+      operationId: getTitleById
+      description: "Retourne tous les détails d'un titre, incluant son casting, ses genres et ses informations d'accès."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Titre récupéré avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Cache-Control:
+              description: "Cache pendant 5 minutes"
+              schema:
+                type: string
+                example: "private, max-age=300"
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/catalog.yaml#/Title'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440001"
+                originalTitle: "Oppenheimer"
+                type: "MOVIE"
+                status: "PUBLISHED"
+                synopsis: "L'histoire de J. Robert Oppenheimer et du développement de la bombe atomique."
+                tagline: "Le monde change pour toujours."
+                rating: "R"
+                releaseYear: 2023
+                posterUrl: "https://cdn.primevideo.com/titles/oppenheimer/poster.jpg"
+                backdropUrl: "https://cdn.primevideo.com/titles/oppenheimer/backdrop.jpg"
+                imdbId: "tt15398776"
+                imdbRating: 8.3
+                genres:
+                  - id: "genre-001"
+                    name: "Biopic"
+                    slug: "biopic"
+                technicalDetails:
+                  resolutionMax: "UHD_4K"
+                  hasHDR: true
+                  hasDolbyAtmos: true
+                  durationMinutes: 180
+                  supportedAudioLanguages: ["fr", "en"]
+                  supportedSubtitles: ["fr", "en", "ar"]
+                accessInfo:
+                  accessType: "INCLUDED"
+                createdAt: "2023-07-21T10:00:00Z"
+                updatedAt: "2023-07-21T10:00:00Z"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # CASTING D'UN TITRE
+  # ==============================================================
+  /titles/{titleId}/casting:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Catalog
+      summary: "Obtenir le casting complet d'un titre"
+      operationId: getTitleCasting
+      description: "Retourne la liste des acteurs, réalisateurs et autres membres du casting d'un titre."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Casting récupéré avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/catalog.yaml#/CastingMember'
+              example:
+                - person:
+                    id: "person-001"
+                    fullName: "Cillian Murphy"
+                    photoUrl: "https://cdn.primevideo.com/people/murphy.jpg"
+                  characterName: "J. Robert Oppenheimer"
+                  role: "ACTOR"
+                  order: 1
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # SAISONS D'UNE SÉRIE
+  # ==============================================================
+  /titles/{titleId}/seasons:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Catalog
+      summary: "Lister les saisons d'une série"
+      operationId: listSeasonsByTitle
+      description: "Retourne toutes les saisons d'une série. Retourne 400 si le titre est un film."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Saisons récupérées avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/catalog.yaml#/Season'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # ÉPISODES D'UNE SAISON
+  # ==============================================================
+  /titles/{titleId}/seasons/{seasonNumber}/episodes:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: seasonNumber
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      tags:
+        - Catalog
+      summary: "Lister les épisodes d'une saison"
+      operationId: listEpisodesBySeason
+      description: "Retourne tous les épisodes d'une saison donnée d'une série."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Épisodes récupérés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/catalog.yaml#/Episode'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # GENRES
+  # ==============================================================
+  /genres:
+    get:
+      tags:
+        - Genres
+      summary: "Lister tous les genres"
+      operationId: listGenres
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Genres récupérés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Cache-Control:
+              schema:
+                type: string
+                example: "public, max-age=3600"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/catalog.yaml#/Genre'
+              example:
+                - id: "genre-001"
+                  name: "Action"
+                  slug: "action"
+                  createdAt: "2024-01-01T00:00:00Z"
+                  updatedAt: "2024-01-01T00:00:00Z"
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # COLLECTIONS
+  # ==============================================================
+  /collections:
+    get:
+      tags:
+        - Collections
+      summary: "Lister toutes les collections"
+      operationId: listCollections
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [FRANCHISE, UNIVERSE, THEMATIC, EDITORIAL]
+      responses:
+        '200':
+          description: "Collections récupérées avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../components/schemas/catalog.yaml#/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../components/schemas/catalog.yaml#/Collection'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /collections/{collectionId}/titles:
+    parameters:
+      - name: collectionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Collections
+      summary: "Lister les titres d'une collection"
+      operationId: listTitlesByCollection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
+      responses:
+        '200':
+          description: "Titres de la collection récupérés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../components/schemas/catalog.yaml#/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../components/schemas/catalog.yaml#/TitleSummary'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'

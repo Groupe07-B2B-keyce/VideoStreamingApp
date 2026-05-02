@@ -1,0 +1,14 @@
+RateLimitLimit:
+  description: "Nombre de requêtes autorisées par fenêtre de temps"
+  schema:
+    type: integer
+
+RateLimitRemaining:
+  description: "Nombre de requêtes restantes dans la fenêtre courante"
+  schema:
+    type: integer
+
+RateLimitReset:
+  description: "Timestamp (Unix) indiquant quand le quota sera réinitialisé"
+  schema:
+    type: integer

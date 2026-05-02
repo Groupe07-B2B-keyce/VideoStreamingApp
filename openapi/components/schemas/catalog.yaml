@@ -1,0 +1,374 @@
+# ==============================================================
+# SCHÉMAS DE BASE (Héritage)
+# ==============================================================
+
+BaseEntity:
+  type: object
+  description: "Propriétés communes à toutes les entités"
+  required:
+    - id
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: "Identifiant unique de la ressource"
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    createdAt:
+      type: string
+      format: date-time
+      description: "Date de création (ISO 8601)"
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: "Date de dernière mise à jour (ISO 8601)"
+      example: "2024-06-01T14:00:00Z"
+
+PaginatedResponse:
+  type: object
+  description: "Enveloppe pour les réponses paginées"
+  required:
+    - data
+    - meta
+  properties:
+    meta:
+      type: object
+      required:
+        - totalItems
+        - totalPages
+        - currentPage
+        - itemsPerPage
+      properties:
+        totalItems:
+          type: integer
+          example: 250
+        totalPages:
+          type: integer
+          example: 13
+        currentPage:
+          type: integer
+          example: 1
+        itemsPerPage:
+          type: integer
+          example: 20
+
+# ==============================================================
+# CATALOGUE
+# ==============================================================
+
+Genre:
+  allOf:
+    - $ref: '#/BaseEntity'
+    - type: object
+      required:
+        - name
+        - slug
+      properties:
+        name:
+          type: string
+          description: "Nom du genre"
+          example: "Action"
+        slug:
+          type: string
+          description: "Identifiant URL du genre"
+          example: "action"
+        description:
+          type: string
+          example: "Films d'action et d'aventure à grande vitesse"
+
+Collection:
+  allOf:
+    - $ref: '#/BaseEntity'
+    - type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          example: "Marvel Cinematic Universe"
+        slug:
+          type: string
+          example: "marvel-cinematic-universe"
+        type:
+          type: string
+          enum: [FRANCHISE, UNIVERSE, THEMATIC, EDITORIAL]
+          description: "Type de collection"
+        description:
+          type: string
+        posterUrl:
+          type: string
+          format: uri
+          example: "https://cdn.primevideo.com/collections/mcu/poster.jpg"
+
+Person:
+  allOf:
+    - $ref: '#/BaseEntity'
+    - type: object
+      required:
+        - fullName
+      properties:
+        fullName:
+          type: string
+          example: "Christopher Nolan"
+        photoUrl:
+          type: string
+          format: uri
+          example: "https://cdn.primevideo.com/people/nolan.jpg"
+        biography:
+          type: string
+        birthDate:
+          type: string
+          format: date
+          example: "1970-07-30"
+
+CastingMember:
+  type: object
+  description: "Lien entre un Title et une Person (rôle joué)"
+  properties:
+    person:
+      $ref: '#/Person'
+    characterName:
+      type: string
+      description: "Nom du personnage joué"
+      example: "Bruce Wayne"
+    role:
+      type: string
+      enum: [ACTOR, DIRECTOR, PRODUCER, COMPOSER, SCREENWRITER]
+      description: "Rôle de la personne dans le titre"
+    order:
+      type: integer
+      description: "Ordre d'affichage au générique"
+      example: 1
+
+TechnicalDetails:
+  type: object
+  description: "Caractéristiques techniques du fichier vidéo"
+  properties:
+    resolutionMax:
+      type: string
+      enum: [SD, HD_720P, FHD_1080P, UHD_4K, UHD_8K]
+      description: "Résolution maximale disponible"
+    hasHDR:
+      type: boolean
+      description: "Disponible en HDR"
+    hasDolbyVision:
+      type: boolean
+      description: "Disponible en Dolby Vision"
+    hasDolbyAtmos:
+      type: boolean
+      description: "Disponible en Dolby Atmos"
+    durationMinutes:
+      type: integer
+      description: "Durée du contenu en minutes"
+      example: 148
+    supportedAudioLanguages:
+      type: array
+      items:
+        type: string
+        description: "Code langue ISO 639-1"
+      example: ["fr", "en", "es"]
+    supportedSubtitles:
+      type: array
+      items:
+        type: string
+      example: ["fr", "en", "ar", "sw"]
+
+AccessInfo:
+  type: object
+  description: "Conditions d'accès au titre (modèle hybride SVOD/TVOD)"
+  required:
+    - accessType
+  properties:
+    accessType:
+      type: string
+      enum: [INCLUDED, RENT, BUY, CHANNEL_SUBSCRIPTION]
+      description: "Modèle d'accès (Inclus Prime, Location, Achat ou Canal)"
+    rentalPrice:
+      type: number
+      format: double
+      description: "Prix de location (si applicable)"
+      example: 3.99
+    purchasePrice:
+      type: number
+      format: double
+      description: "Prix d'achat (si applicable)"
+      example: 9.99
+    currency:
+      type: string
+      example: "EUR"
+    rentalDurationHours:
+      type: integer
+      description: "Durée d'accès après location en heures"
+      example: 48
+
+# Schéma principal d'un Titre (Film ou Série)
+Title:
+  allOf:
+    - $ref: '#/BaseEntity'
+    - type: object
+      required:
+        - originalTitle
+        - type
+        - status
+        - rating
+        - releaseYear
+        - technicalDetails
+        - accessInfo
+      properties:
+        originalTitle:
+          type: string
+          description: "Titre original de l'œuvre"
+          example: "Oppenheimer"
+        localizedTitle:
+          type: string
+          description: "Titre traduit/localisé"
+          example: "Oppenheimer"
+        type:
+          type: string
+          enum: [MOVIE, SERIES, DOCUMENTARY, MINI_SERIES, STAND_UP]
+          description: "Type de contenu"
+        status:
+          type: string
+          enum: [DRAFT, PENDING_REVIEW, PUBLISHED, ARCHIVED, COMING_SOON]
+          description: "Statut de publication"
+        synopsis:
+          type: string
+          example: "L'histoire de J. Robert Oppenheimer et du développement de la bombe atomique."
+        tagline:
+          type: string
+          example: "Le monde change pour toujours."
+        rating:
+          type: string
+          enum: [G, PG, PG13, R, NC17, UNRATED, TV_MA, TV_14, TV_PG, TV_G]
+          description: "Classification d'âge"
+        releaseYear:
+          type: integer
+          example: 2023
+        posterUrl:
+          type: string
+          format: uri
+          example: "https://cdn.primevideo.com/titles/oppenheimer/poster.jpg"
+        backdropUrl:
+          type: string
+          format: uri
+          example: "https://cdn.primevideo.com/titles/oppenheimer/backdrop.jpg"
+        trailerUrl:
+          type: string
+          format: uri
+        imdbId:
+          type: string
+          description: "Identifiant IMDb"
+          example: "tt15398776"
+        imdbRating:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 10
+          example: 8.3
+        genres:
+          type: array
+          items:
+            $ref: '#/Genre'
+        collections:
+          type: array
+          items:
+            $ref: '#/Collection'
+        technicalDetails:
+          $ref: '#/TechnicalDetails'
+        accessInfo:
+          $ref: '#/AccessInfo'
+        totalSeasonsCount:
+          type: integer
+          description: "Nombre de saisons (uniquement pour les séries)"
+          example: 3
+
+TitleSummary:
+  type: object
+  description: "Version allégée de Title pour les listes (évite l'over-fetching)"
+  required:
+    - id
+    - originalTitle
+    - type
+    - rating
+    - posterUrl
+    - accessInfo
+  properties:
+    id:
+      type: string
+      format: uuid
+    originalTitle:
+      type: string
+    type:
+      type: string
+      enum: [MOVIE, SERIES, DOCUMENTARY, MINI_SERIES, STAND_UP]
+    rating:
+      type: string
+    releaseYear:
+      type: integer
+    posterUrl:
+      type: string
+      format: uri
+    imdbRating:
+      type: number
+      format: double
+    accessInfo:
+      $ref: '#/AccessInfo'
+
+Season:
+  allOf:
+    - $ref: '#/BaseEntity'
+    - type: object
+      required:
+        - seasonNumber
+        - title
+        - status
+      properties:
+        seasonNumber:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Saison 1"
+        synopsis:
+          type: string
+        posterUrl:
+          type: string
+          format: uri
+        releaseYear:
+          type: integer
+        episodesCount:
+          type: integer
+          example: 8
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, ARCHIVED]
+
+Episode:
+  allOf:
+    - $ref: '#/BaseEntity'
+    - type: object
+      required:
+        - episodeNumber
+        - title
+        - status
+        - technicalDetails
+      properties:
+        episodeNumber:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "L'Arrivée"
+        synopsis:
+          type: string
+        thumbnailUrl:
+          type: string
+          format: uri
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, ARCHIVED]
+        technicalDetails:
+          $ref: '#/TechnicalDetails'

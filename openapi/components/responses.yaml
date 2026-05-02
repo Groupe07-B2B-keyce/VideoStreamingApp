@@ -1,0 +1,87 @@
+BadRequest:
+  description: "Requête invalide (paramètres manquants ou mal formés)"
+  headers:
+    X-RateLimit-Limit:
+      $ref: './headers.yaml#/RateLimitLimit'
+    X-RateLimit-Remaining:
+      $ref: './headers.yaml#/RateLimitRemaining'
+    X-RateLimit-Reset:
+      $ref: './headers.yaml#/RateLimitReset'
+  content:
+    application/json:
+      schema:
+        $ref: './schemas/errors.yaml#/ValidationError'
+        
+Unauthorized:
+  description: "Authentification requise ou token invalide"
+  headers:
+    X-RateLimit-Limit:
+      $ref: './headers.yaml#/RateLimitLimit'
+    X-RateLimit-Remaining:
+      $ref: './headers.yaml#/RateLimitRemaining'
+    X-RateLimit-Reset:
+      $ref: './headers.yaml#/RateLimitReset'
+  content:
+    application/json:
+      schema:
+        $ref: './schemas/errors.yaml#/ProblemDetails'
+        
+Forbidden:
+  description: "Accès refusé (permissions insuffisantes)"
+  headers:
+    X-RateLimit-Limit:
+      $ref: './headers.yaml#/RateLimitLimit'
+    X-RateLimit-Remaining:
+      $ref: './headers.yaml#/RateLimitRemaining'
+    X-RateLimit-Reset:
+      $ref: './headers.yaml#/RateLimitReset'
+  content:
+    application/json:
+      schema:
+        $ref: './schemas/errors.yaml#/ProblemDetails'
+        
+NotFound:
+  description: "Ressource non trouvée"
+  headers:
+    X-RateLimit-Limit:
+      $ref: './headers.yaml#/RateLimitLimit'
+    X-RateLimit-Remaining:
+      $ref: './headers.yaml#/RateLimitRemaining'
+    X-RateLimit-Reset:
+      $ref: './headers.yaml#/RateLimitReset'
+  content:
+    application/json:
+      schema:
+        $ref: './schemas/errors.yaml#/ProblemDetails'
+        
+RateLimitError:
+  description: "Limite de requêtes dépassée (Rate Limit)"
+  headers:
+    Retry-After:
+      description: "Nombre de secondes avant de pouvoir réessayer"
+      schema:
+        type: integer
+    X-RateLimit-Limit:
+      $ref: './headers.yaml#/RateLimitLimit'
+    X-RateLimit-Remaining:
+      $ref: './headers.yaml#/RateLimitRemaining'
+    X-RateLimit-Reset:
+      $ref: './headers.yaml#/RateLimitReset'
+  content:
+    application/json:
+      schema:
+        $ref: './schemas/errors.yaml#/ProblemDetails'
+        
+InternalServerError:
+  description: "Erreur serveur interne"
+  headers:
+    X-RateLimit-Limit:
+      $ref: './headers.yaml#/RateLimitLimit'
+    X-RateLimit-Remaining:
+      $ref: './headers.yaml#/RateLimitRemaining'
+    X-RateLimit-Reset:
+      $ref: './headers.yaml#/RateLimitReset'
+  content:
+    application/json:
+      schema:
+        $ref: './schemas/errors.yaml#/ProblemDetails'

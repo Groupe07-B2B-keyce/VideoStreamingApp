@@ -1,0 +1,48 @@
+ProblemDetails:
+  type: object
+  description: "Format d'erreur standardisé selon RFC 7807"
+  required:
+    - type
+    - title
+    - status
+  properties:
+    type:
+      type: string
+      format: uri
+      description: "URI identifiant le type d'erreur"
+    title:
+      type: string
+      description: "Résumé court et lisible du problème"
+    status:
+      type: integer
+      format: int32
+      description: "Code de statut HTTP"
+    detail:
+      type: string
+      description: "Explication détaillée spécifique à cette occurrence"
+    instance:
+      type: string
+      format: uri
+      description: "URI identifiant l'occurrence spécifique du problème"
+    correlationId:
+      type: string
+      format: uuid
+      description: "ID de corrélation pour le traçage"
+
+ValidationError:
+  allOf:
+    - $ref: '#/ProblemDetails'
+    - type: object
+      properties:
+        errors:
+          type: array
+          description: "Liste détaillée des erreurs de validation"
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+              message:
+                type: string

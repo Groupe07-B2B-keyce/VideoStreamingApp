@@ -1,0 +1,76 @@
+openapi: 3.0.3
+info:
+  title: Prime Video Clone API
+  version: 1.0.0
+  description: Spécification OpenAPI 3.0 pour le clone de Prime Video (Approche Domain-Driven Design).
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Serveur de développement local
+security:
+  - bearerAuth: []
+paths:
+  # ---- CORE CATALOG ----
+  /titles:
+    $ref: './paths/catalog.yaml#/paths/~1titles'
+  /titles/{titleId}:
+    $ref: './paths/catalog.yaml#/paths/~1titles~1{titleId}'
+  /titles/{titleId}/casting:
+    $ref: './paths/catalog.yaml#/paths/~1titles~1{titleId}~1casting'
+  /titles/{titleId}/seasons:
+    $ref: './paths/catalog.yaml#/paths/~1titles~1{titleId}~1seasons'
+  /titles/{titleId}/seasons/{seasonNumber}/episodes:
+    $ref: './paths/catalog.yaml#/paths/~1titles~1{titleId}~1seasons~1{seasonNumber}~1episodes'
+  /genres:
+    $ref: './paths/catalog.yaml#/paths/~1genres'
+  /collections:
+    $ref: './paths/catalog.yaml#/paths/~1collections'
+  /collections/{collectionId}/titles:
+    $ref: './paths/catalog.yaml#/paths/~1collections~1{collectionId}~1titles'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: './components/security.yaml#/bearerAuth'
+  
+  responses:
+    RateLimitError:
+      $ref: './components/responses.yaml#/RateLimitError'
+    BadRequest:
+      $ref: './components/responses.yaml#/BadRequest'
+    Unauthorized:
+      $ref: './components/responses.yaml#/Unauthorized'
+    Forbidden:
+      $ref: './components/responses.yaml#/Forbidden'
+    NotFound:
+      $ref: './components/responses.yaml#/NotFound'
+    InternalServerError:
+      $ref: './components/responses.yaml#/InternalServerError'
+      
+  parameters:
+    PageParam:
+      $ref: './components/parameters.yaml#/PageParam'
+    LimitParam:
+      $ref: './components/parameters.yaml#/LimitParam'
+      
+  schemas:
+    ProblemDetails:
+      $ref: './components/schemas/errors.yaml#/ProblemDetails'
+    ValidationError:
+      $ref: './components/schemas/errors.yaml#/ValidationError'
+    # Catalog schemas
+    Title:
+      $ref: './components/schemas/catalog.yaml#/Title'
+    TitleSummary:
+      $ref: './components/schemas/catalog.yaml#/TitleSummary'
+    Season:
+      $ref: './components/schemas/catalog.yaml#/Season'
+    Episode:
+      $ref: './components/schemas/catalog.yaml#/Episode'
+    Genre:
+      $ref: './components/schemas/catalog.yaml#/Genre'
+    Collection:
+      $ref: './components/schemas/catalog.yaml#/Collection'
+    CastingMember:
+      $ref: './components/schemas/catalog.yaml#/CastingMember'
+    Person:
+      $ref: './components/schemas/catalog.yaml#/Person'
