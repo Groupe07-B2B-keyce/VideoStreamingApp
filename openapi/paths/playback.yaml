@@ -1,0 +1,474 @@
+tags:
+  - name: Playback
+    description: "Lancement de la lecture, token de streaming sécurisé (DRM)"
+  - name: WatchProgress
+    description: "Suivi de la progression de lecture et historique"
+  - name: XRay
+    description: "Métadonnées temporelles X-Ray (acteurs à l'écran, musique, anecdotes)"
+
+paths:
+
+  # ==============================================================
+  # PLAYBACK — LANCEMENT DE LA LECTURE
+  # ==============================================================
+
+  /titles/{titleId}/playback:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Playback]
+      summary: "Lancer la lecture d'un titre"
+      operationId: startPlayback
+      description: >
+        Génère un token de streaming sécurisé (JWT signé, durée 4h) avec l'URL HLS/DASH
+        et les infos DRM adaptées à l'appareil. Vérifie les droits de diffusion dans le pays
+        du compte avant de délivrer le token.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/playback.yaml#/StartPlaybackRequest'
+            example:
+              profileId: "profile-001"
+              deviceType: "SMART_TV"
+              preferredQuality: "UHD_4K"
+              resumeFromProgress: true
+      responses:
+        '200':
+          description: "Token de lecture délivré avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/playback.yaml#/PlaybackToken'
+              example:
+                streamUrl: "https://stream.primevideo.com/hls/oppenheimer/master.m3u8"
+                token: "eyJhbGciOiJSUzI1NiJ9.eyJ0aXRsZUlkIjoib3BwZW5oZWltZXIifQ..."
+                expiresAt: "2024-06-01T22:00:00Z"
+                format: "HLS"
+                drmType: "WIDEVINE"
+                availableQualities: ["UHD_4K", "FHD_1080P", "HD_720P", "SD"]
+                subtitleTracks:
+                  - language: "fr"
+                    label: "Français"
+                    url: "https://stream.primevideo.com/subs/oppenheimer/fr.vtt"
+                  - language: "en"
+                    label: "English"
+                    url: "https://stream.primevideo.com/subs/oppenheimer/en.vtt"
+                audioTracks:
+                  - language: "fr"
+                    label: "Français"
+                    codec: "EAC3"
+                  - language: "en"
+                    label: "English"
+                    codec: "EAC3"
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          description: "Accès refusé — titre non disponible dans votre pays ou abonnement insuffisant"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.com/errors/geo-restricted"
+                title: "Contenu non disponible dans votre région"
+                status: 403
+                detail: "Ce titre n'est pas disponible en France avec votre abonnement actuel."
+                instance: "/api/v1/titles/oppenheimer-id/playback"
+                correlationId: "f6a7b8c9-d0e1-2345-fabc-456789012345"
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # WATCH PROGRESS — SUIVI DE LA PROGRESSION
+  # ==============================================================
+
+  /profiles/{profileId}/watch-progress:
+    parameters:
+      - name: profileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [WatchProgress]
+      summary: "Historique de visionnage d'un profil"
+      operationId: getWatchHistory
+      description: "Retourne l'historique de visionnage paginé du profil, trié par date décroissante."
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
+        - name: status
+          in: query
+          description: "Filtrer par statut"
+          schema:
+            type: string
+            enum: [IN_PROGRESS, COMPLETED, ABANDONED]
+      responses:
+        '200':
+          description: "Historique récupéré avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../components/schemas/catalog.yaml#/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../components/schemas/playback.yaml#/WatchHistory'
+              example:
+                meta:
+                  totalItems: 25
+                  totalPages: 2
+                  currentPage: 1
+                  itemsPerPage: 20
+                data:
+                  - title:
+                      id: "title-001"
+                      originalTitle: "Oppenheimer"
+                      type: "MOVIE"
+                      posterUrl: "https://cdn.primevideo.com/titles/oppenheimer/poster.jpg"
+                    session:
+                      progressSeconds: 4320
+                      durationSeconds: 10800
+                      completionPercent: 40.0
+                      status: "IN_PROGRESS"
+                      lastWatchedAt: "2024-06-01T21:30:00Z"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /profiles/{profileId}/watch-progress/{titleId}:
+    parameters:
+      - name: profileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [WatchProgress]
+      summary: "Progression sur un titre spécifique"
+      operationId: getProgressForTitle
+      description: "Retourne la position exacte de lecture pour permettre le 'Reprendre la lecture'."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Progression récupérée"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/playback.yaml#/WatchSession'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+    put:
+      tags: [WatchProgress]
+      summary: "Mettre à jour la progression (heartbeat)"
+      operationId: updateWatchProgress
+      description: >
+        Enregistre la position de lecture courante. Appelé périodiquement par le player
+        (toutes les 30s) et lors de la pause/fermeture. Crée la session si elle n'existe pas encore.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/playback.yaml#/UpdateWatchProgressRequest'
+            example:
+              progressSeconds: 5100
+              durationSeconds: 10800
+              deviceType: "SMART_TV"
+              qualitySelected: "UHD_4K"
+      responses:
+        '200':
+          description: "Progression mise à jour"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/playback.yaml#/WatchSession'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+    delete:
+      tags: [WatchProgress]
+      summary: "Supprimer un titre de l'historique"
+      operationId: deleteWatchProgress
+      description: "Supprime l'entrée de l'historique de visionnage pour ce titre et ce profil."
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: "Entrée supprimée de l'historique"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # X-RAY — MÉTADONNÉES TEMPORELLES
+  # ==============================================================
+
+  /titles/{titleId}/xray:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: timestampSeconds
+        in: query
+        required: true
+        description: "Position actuelle dans la vidéo (en secondes) pour récupérer les events actifs"
+        schema:
+          type: integer
+          minimum: 0
+          example: 255
+      - name: episodeId
+        in: query
+        description: "Identifiant de l'épisode (séries uniquement)"
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [XRay]
+      summary: "Obtenir les métadonnées X-Ray à un timestamp"
+      operationId: getXRayAtTimestamp
+      description: >
+        Retourne tous les TimelineEvents actifs à la seconde indiquée : acteurs visibles
+        à l'écran, musique jouée, anecdotes de tournage. Permet d'afficher le panneau
+        X-Ray en temps réel pendant le visionnage.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Événements X-Ray récupérés"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Cache-Control:
+              description: "Les données X-Ray sont stables, mise en cache longue durée"
+              schema:
+                type: string
+                example: "public, max-age=86400"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/playback.yaml#/TimelineEvent'
+              example:
+                - id: "event-001"
+                  titleId: "title-oppenheimer"
+                  eventType: "CAST_ON_SCREEN"
+                  startTimeSeconds: 255
+                  endTimeSeconds: 330
+                  person:
+                    id: "person-001"
+                    fullName: "Cillian Murphy"
+                    photoUrl: "https://cdn.primevideo.com/people/murphy.jpg"
+                  characterName: "J. Robert Oppenheimer"
+                  createdAt: "2024-01-01T00:00:00Z"
+                  updatedAt: "2024-01-01T00:00:00Z"
+                - id: "event-002"
+                  titleId: "title-oppenheimer"
+                  eventType: "MUSIC_PLAYING"
+                  startTimeSeconds: 260
+                  endTimeSeconds: 310
+                  musicTitle: "Can You Hear the Music"
+                  musicArtist: "Ludwig Göransson"
+                  createdAt: "2024-01-01T00:00:00Z"
+                  updatedAt: "2024-01-01T00:00:00Z"
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /admin/titles/{titleId}/xray:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [XRay]
+      summary: "Ajouter un événement X-Ray (Admin)"
+      operationId: createTimelineEvent
+      description: "Permet aux éditeurs ou à l'équipe de créer des métadonnées X-Ray sur un titre publié."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventType
+                - startTimeSeconds
+                - endTimeSeconds
+              properties:
+                episodeId:
+                  type: string
+                  format: uuid
+                eventType:
+                  $ref: '../components/schemas/playback.yaml#/TimelineEventType'
+                startTimeSeconds:
+                  type: integer
+                  minimum: 0
+                endTimeSeconds:
+                  type: integer
+                  minimum: 1
+                personId:
+                  type: string
+                  format: uuid
+                  description: "Requis si eventType = CAST_ON_SCREEN"
+                characterName:
+                  type: string
+                musicTitle:
+                  type: string
+                  description: "Requis si eventType = MUSIC_PLAYING"
+                musicArtist:
+                  type: string
+                text:
+                  type: string
+                  description: "Requis si eventType = FUN_FACT ou TRIVIA"
+            example:
+              eventType: "CAST_ON_SCREEN"
+              startTimeSeconds: 255
+              endTimeSeconds: 330
+              personId: "person-001"
+              characterName: "J. Robert Oppenheimer"
+      responses:
+        '201':
+          description: "Événement X-Ray créé avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Location:
+              schema:
+                type: string
+                example: "/api/v1/admin/titles/title-abc/xray/event-003"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/playback.yaml#/TimelineEvent'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'

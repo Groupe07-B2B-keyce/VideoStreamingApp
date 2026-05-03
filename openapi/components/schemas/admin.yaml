@@ -1,0 +1,353 @@
+# ==============================================================
+# ADMIN & LICENSING — SCHÉMAS DE DONNÉES
+# ==============================================================
+
+# --------------------------------------------------------------
+# PARTNER ACCOUNT (Compte Éditeur / Studio)
+# --------------------------------------------------------------
+PartnerAccount:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - companyName
+        - email
+        - status
+        - partnerType
+      properties:
+        companyName:
+          type: string
+          description: "Nom de la société ou du studio"
+          example: "Indie Films Studio SAS"
+        email:
+          type: string
+          format: email
+          example: "contact@indiefilms.com"
+        status:
+          type: string
+          enum: [PENDING_VERIFICATION, ACTIVE, SUSPENDED, BANNED]
+          description: "Statut du compte partenaire"
+        partnerType:
+          type: string
+          enum: [INDEPENDENT, STUDIO_MAJOR, DISTRIBUTOR, CHANNEL]
+          description: "Type de partenaire"
+        country:
+          type: string
+          description: "Pays d'enregistrement de la société"
+          example: "FR"
+        websiteUrl:
+          type: string
+          format: uri
+          example: "https://www.indiefilms.com"
+        totalTitles:
+          type: integer
+          description: "Nombre total de titres soumis par ce partenaire"
+          example: 42
+
+# --------------------------------------------------------------
+# MEDIA INGESTION (Soumission de contenu)
+# --------------------------------------------------------------
+MediaIngestionStatus:
+  type: string
+  enum: [UPLOADING, PROCESSING, PENDING_REVIEW, APPROVED, REJECTED, PUBLISHED, ARCHIVED]
+  description: >
+    Cycle de vie d'un contenu soumis :
+    UPLOADING → PROCESSING → PENDING_REVIEW → APPROVED/REJECTED → PUBLISHED
+
+SubmitTitleRequest:
+  type: object
+  required:
+    - originalTitle
+    - type
+    - releaseYear
+    - rating
+    - synopsis
+    - videoFileUrl
+    - posterUrl
+  properties:
+    originalTitle:
+      type: string
+      maxLength: 255
+      example: "Le Dernier Voyage"
+    type:
+      type: string
+      enum: [MOVIE, SERIES, DOCUMENTARY, MINI_SERIES, STAND_UP]
+    releaseYear:
+      type: integer
+      minimum: 1888
+      maximum: 2030
+      example: 2024
+    rating:
+      type: string
+      enum: [G, PG, PG13, R, NC17, TV_MA, TV_14, TV_PG, TV_G]
+    synopsis:
+      type: string
+      maxLength: 2000
+      example: "Un homme part à la recherche de ses origines..."
+    tagline:
+      type: string
+      maxLength: 255
+    genreIds:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: "Liste des identifiants de genres"
+    videoFileUrl:
+      type: string
+      format: uri
+      description: "URL du fichier vidéo source (stockage sécurisé S3/Aspera)"
+      example: "s3://primevideo-ingestion/partners/indie/le-dernier-voyage.mp4"
+    posterUrl:
+      type: string
+      format: uri
+      example: "s3://primevideo-ingestion/partners/indie/poster.jpg"
+    backdropUrl:
+      type: string
+      format: uri
+    trailerUrl:
+      type: string
+      format: uri
+    imdbId:
+      type: string
+      example: "tt1234567"
+    castingData:
+      type: array
+      description: "Données de casting à associer au titre"
+      items:
+        type: object
+        required:
+          - fullName
+          - role
+        properties:
+          fullName:
+            type: string
+            example: "Marie Curie"
+          role:
+            type: string
+            enum: [ACTOR, DIRECTOR, PRODUCER, COMPOSER, SCREENWRITER]
+          characterName:
+            type: string
+    technicalDetails:
+      $ref: './catalog.yaml#/TechnicalDetails'
+
+IngestionJob:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - status
+        - titleId
+      properties:
+        titleId:
+          type: string
+          format: uuid
+          description: "Identifiant du titre associé"
+        originalTitle:
+          type: string
+        status:
+          $ref: '#/MediaIngestionStatus'
+        reviewNotes:
+          type: string
+          description: "Commentaires de l'équipe de contrôle qualité"
+          example: "La résolution vidéo est insuffisante. Merci de soumettre en 1080p minimum."
+        processedAt:
+          type: string
+          format: date-time
+          description: "Date de traitement par le système QC automatique"
+        reviewedAt:
+          type: string
+          format: date-time
+          description: "Date de révision humaine"
+        rejectionCode:
+          type: string
+          enum: [LOW_QUALITY, COPYRIGHT_ISSUE, CONTENT_VIOLATION, METADATA_INCOMPLETE, TECHNICAL_ERROR]
+          description: "Code de rejet (si applicable)"
+
+UpdateIngestionStatusRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      type: string
+      enum: [APPROVED, REJECTED]
+    reviewNotes:
+      type: string
+      description: "Commentaires obligatoires en cas de rejet"
+    rejectionCode:
+      type: string
+      enum: [LOW_QUALITY, COPYRIGHT_ISSUE, CONTENT_VIOLATION, METADATA_INCOMPLETE, TECHNICAL_ERROR]
+
+# --------------------------------------------------------------
+# LICENSING (Droits de diffusion par région)
+# --------------------------------------------------------------
+License:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - titleId
+        - countryCode
+        - accessType
+        - startDate
+      properties:
+        titleId:
+          type: string
+          format: uuid
+          description: "Titre concerné par la licence"
+        countryCode:
+          type: string
+          description: "Code pays ISO 3166-1 alpha-2 ('*' = mondial)"
+          example: "FR"
+        accessType:
+          type: string
+          enum: [INCLUDED, RENT, BUY, CHANNEL_SUBSCRIPTION]
+          description: "Mode d'accès accordé dans ce pays"
+        rentalPrice:
+          type: number
+          format: double
+          example: 3.99
+        purchasePrice:
+          type: number
+          format: double
+          example: 9.99
+        currency:
+          type: string
+          example: "EUR"
+        startDate:
+          type: string
+          format: date
+          description: "Date de début de validité de la licence"
+          example: "2024-01-01"
+        endDate:
+          type: string
+          format: date
+          description: "Date de fin de validité (null = illimitée)"
+          example: "2025-12-31"
+        isExclusive:
+          type: boolean
+          description: "Droits exclusifs dans ce pays"
+          default: false
+
+CreateLicenseRequest:
+  type: object
+  required:
+    - countryCode
+    - accessType
+    - startDate
+  properties:
+    countryCode:
+      type: string
+      example: "FR"
+    accessType:
+      type: string
+      enum: [INCLUDED, RENT, BUY, CHANNEL_SUBSCRIPTION]
+    rentalPrice:
+      type: number
+      format: double
+    purchasePrice:
+      type: number
+      format: double
+    currency:
+      type: string
+      default: "EUR"
+    startDate:
+      type: string
+      format: date
+    endDate:
+      type: string
+      format: date
+    isExclusive:
+      type: boolean
+      default: false
+
+# --------------------------------------------------------------
+# ANALYTICS (Statistiques partenaire)
+# --------------------------------------------------------------
+TitleAnalytics:
+  type: object
+  description: "Statistiques de visionnage pour un titre"
+  properties:
+    titleId:
+      type: string
+      format: uuid
+    titleName:
+      type: string
+    totalViews:
+      type: integer
+      description: "Nombre total de visionnages"
+      example: 125000
+    uniqueViewers:
+      type: integer
+      description: "Nombre de spectateurs uniques"
+      example: 98000
+    averageWatchDurationMinutes:
+      type: number
+      format: double
+      description: "Durée moyenne de visionnage en minutes"
+      example: 72.5
+    completionRate:
+      type: number
+      format: double
+      description: "Taux de complétion (0.0 à 1.0)"
+      example: 0.68
+    totalRevenue:
+      type: number
+      format: double
+      description: "Revenus totaux générés (locations + achats)"
+      example: 4520.50
+    currency:
+      type: string
+      example: "EUR"
+    period:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+    topCountries:
+      type: array
+      description: "Top 5 des pays par nombre de vues"
+      items:
+        type: object
+        properties:
+          countryCode:
+            type: string
+            example: "FR"
+          viewCount:
+            type: integer
+            example: 45000
+
+GlobalPlatformStats:
+  type: object
+  description: "Statistiques globales de la plateforme (Super Admin uniquement)"
+  properties:
+    totalUsers:
+      type: integer
+      example: 2500000
+    activeSubscriptions:
+      type: integer
+      example: 1800000
+    totalTitles:
+      type: integer
+      example: 12500
+    totalPartners:
+      type: integer
+      example: 380
+    totalViewsThisMonth:
+      type: integer
+      example: 85000000
+    newRegistrationsThisMonth:
+      type: integer
+      example: 45000
+    revenueThisMonth:
+      type: number
+      format: double
+      example: 3200000.00
+    currency:
+      type: string
+      example: "EUR"

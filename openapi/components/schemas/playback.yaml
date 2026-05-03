@@ -1,0 +1,251 @@
+# ==============================================================
+# PLAYBACK & X-RAY — SCHÉMAS DE DONNÉES
+# ==============================================================
+
+# --------------------------------------------------------------
+# WATCH SESSION (Progression de lecture)
+# --------------------------------------------------------------
+WatchSession:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - profileId
+        - titleId
+        - progressSeconds
+        - status
+      properties:
+        profileId:
+          type: string
+          format: uuid
+          description: "Profil qui regarde"
+        titleId:
+          type: string
+          format: uuid
+          description: "Titre en cours de lecture"
+        episodeId:
+          type: string
+          format: uuid
+          description: "Épisode concerné (null si film)"
+        progressSeconds:
+          type: integer
+          description: "Position actuelle dans le contenu (en secondes)"
+          example: 4320
+        durationSeconds:
+          type: integer
+          description: "Durée totale du contenu (en secondes)"
+          example: 10800
+        completionPercent:
+          type: number
+          format: double
+          description: "Pourcentage de complétion (0.0 à 100.0)"
+          example: 40.0
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, ABANDONED]
+          description: "Statut de la session"
+        deviceType:
+          type: string
+          enum: [SMART_TV, MOBILE, TABLET, WEB, CONSOLE, STREAMING_STICK]
+        qualitySelected:
+          type: string
+          enum: [SD, HD_720P, FHD_1080P, UHD_4K]
+        lastWatchedAt:
+          type: string
+          format: date-time
+          example: "2024-06-01T21:30:00Z"
+
+UpdateWatchProgressRequest:
+  type: object
+  required:
+    - progressSeconds
+    - durationSeconds
+  properties:
+    progressSeconds:
+      type: integer
+      minimum: 0
+      description: "Position actuelle en secondes"
+      example: 4320
+    durationSeconds:
+      type: integer
+      minimum: 1
+      description: "Durée totale du contenu en secondes"
+      example: 10800
+    episodeId:
+      type: string
+      format: uuid
+      description: "Épisode concerné (séries uniquement)"
+    deviceType:
+      type: string
+      enum: [SMART_TV, MOBILE, TABLET, WEB, CONSOLE, STREAMING_STICK]
+    qualitySelected:
+      type: string
+      enum: [SD, HD_720P, FHD_1080P, UHD_4K]
+
+PlaybackToken:
+  type: object
+  description: "Token de lecture sécurisé avec URL de streaming et DRM"
+  required:
+    - streamUrl
+    - token
+    - expiresAt
+  properties:
+    streamUrl:
+      type: string
+      format: uri
+      description: "URL du flux HLS ou DASH"
+      example: "https://stream.primevideo.com/hls/title-abc/master.m3u8"
+    token:
+      type: string
+      description: "Token DRM signé (courte durée — 4h)"
+      example: "eyJhbGciOiJSUzI1NiJ9..."
+    expiresAt:
+      type: string
+      format: date-time
+      description: "Expiration du token de streaming"
+      example: "2024-06-01T22:00:00Z"
+    format:
+      type: string
+      enum: [HLS, DASH]
+      description: "Format du flux vidéo"
+    drmType:
+      type: string
+      enum: [WIDEVINE, FAIRPLAY, PLAYREADY, NONE]
+      description: "Type de protection DRM selon l'appareil"
+    availableQualities:
+      type: array
+      items:
+        type: string
+        enum: [SD, HD_720P, FHD_1080P, UHD_4K]
+      example: ["FHD_1080P", "HD_720P", "SD"]
+    subtitleTracks:
+      type: array
+      description: "Pistes de sous-titres disponibles"
+      items:
+        type: object
+        properties:
+          language:
+            type: string
+            example: "fr"
+          label:
+            type: string
+            example: "Français"
+          url:
+            type: string
+            format: uri
+            example: "https://stream.primevideo.com/subs/title-abc/fr.vtt"
+    audioTracks:
+      type: array
+      description: "Pistes audio disponibles"
+      items:
+        type: object
+        properties:
+          language:
+            type: string
+            example: "en"
+          label:
+            type: string
+            example: "English"
+          codec:
+            type: string
+            example: "EAC3"
+
+StartPlaybackRequest:
+  type: object
+  required:
+    - profileId
+    - deviceType
+  properties:
+    profileId:
+      type: string
+      format: uuid
+      description: "Profil qui lance la lecture"
+    episodeId:
+      type: string
+      format: uuid
+      description: "Épisode à lire (séries uniquement)"
+    deviceType:
+      type: string
+      enum: [SMART_TV, MOBILE, TABLET, WEB, CONSOLE, STREAMING_STICK]
+    preferredQuality:
+      type: string
+      enum: [SD, HD_720P, FHD_1080P, UHD_4K]
+      default: "FHD_1080P"
+    resumeFromProgress:
+      type: boolean
+      description: "Reprendre depuis la dernière position sauvegardée"
+      default: true
+
+# --------------------------------------------------------------
+# X-RAY (Métadonnées temporelles — Inspiration Prime Video)
+# --------------------------------------------------------------
+TimelineEventType:
+  type: string
+  enum: [CAST_ON_SCREEN, MUSIC_PLAYING, FUN_FACT, TRIVIA, SCENE_LOCATION]
+  description: >
+    Type d'événement X-Ray :
+    CAST_ON_SCREEN = acteur visible à l'écran,
+    MUSIC_PLAYING = musique jouée à ce moment,
+    FUN_FACT = anecdote sur la scène,
+    TRIVIA = information sur le tournage,
+    SCENE_LOCATION = lieu de tournage
+
+TimelineEvent:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - titleId
+        - eventType
+        - startTimeSeconds
+        - endTimeSeconds
+      properties:
+        titleId:
+          type: string
+          format: uuid
+        episodeId:
+          type: string
+          format: uuid
+          description: "Épisode concerné (null si film)"
+        eventType:
+          $ref: '#/TimelineEventType'
+        startTimeSeconds:
+          type: integer
+          description: "Début de l'événement dans la vidéo (en secondes)"
+          example: 255
+        endTimeSeconds:
+          type: integer
+          description: "Fin de l'événement dans la vidéo (en secondes)"
+          example: 330
+        person:
+          $ref: './catalog.yaml#/Person'
+          description: "Acteur à l'écran (si eventType = CAST_ON_SCREEN)"
+        characterName:
+          type: string
+          description: "Nom du personnage joué"
+          example: "Bruce Wayne"
+        musicTitle:
+          type: string
+          description: "Titre de la musique (si eventType = MUSIC_PLAYING)"
+          example: "Time"
+        musicArtist:
+          type: string
+          description: "Artiste de la musique"
+          example: "Hans Zimmer"
+        text:
+          type: string
+          description: "Texte de l'anecdote ou trivia"
+          example: "Cette scène a été tournée en 70mm IMAX."
+        imageUrl:
+          type: string
+          format: uri
+          description: "Image associée à l'événement"
+
+WatchHistory:
+  type: object
+  description: "Entrée dans l'historique de visionnage d'un profil"
+  properties:
+    title:
+      $ref: './catalog.yaml#/TitleSummary'
+    session:
+      $ref: '#/WatchSession'

@@ -1,0 +1,308 @@
+# ==============================================================
+# IDENTITY & ACCESS — SCHÉMAS DE DONNÉES
+# ==============================================================
+
+# --------------------------------------------------------------
+# ACCOUNT (Compte — Celui qui paie)
+# --------------------------------------------------------------
+Account:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - email
+        - subscriptionStatus
+      properties:
+        email:
+          type: string
+          format: email
+          description: "Adresse email du titulaire du compte"
+          example: "jean.dupont@example.com"
+        subscriptionStatus:
+          type: string
+          enum: [ACTIVE, SUSPENDED, CANCELLED, TRIAL, PAST_DUE]
+          description: "Statut de l'abonnement"
+          example: "ACTIVE"
+        subscriptionPlan:
+          type: string
+          enum: [FREE, BASIC, STANDARD, PREMIUM]
+          example: "PREMIUM"
+        subscriptionExpiresAt:
+          type: string
+          format: date-time
+          description: "Date d'expiration de l'abonnement"
+          example: "2025-12-31T23:59:59Z"
+        country:
+          type: string
+          description: "Code pays ISO 3166-1 alpha-2 (affecte les droits de diffusion)"
+          example: "FR"
+        phoneNumber:
+          type: string
+          example: "+33612345678"
+        twoFactorEnabled:
+          type: boolean
+          description: "Authentification à deux facteurs activée"
+          default: false
+
+AccountSummary:
+  type: object
+  description: "Version allégée du compte (sans données sensibles)"
+  properties:
+    id:
+      type: string
+      format: uuid
+    email:
+      type: string
+      format: email
+    subscriptionStatus:
+      type: string
+      enum: [ACTIVE, SUSPENDED, CANCELLED, TRIAL, PAST_DUE]
+    subscriptionPlan:
+      type: string
+      enum: [FREE, BASIC, STANDARD, PREMIUM]
+    subscriptionExpiresAt:
+      type: string
+      format: date-time
+    country:
+      type: string
+
+# --------------------------------------------------------------
+# PROFILE (Profil — Celui qui regarde)
+# --------------------------------------------------------------
+Profile:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - displayName
+        - isKidsProfile
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: "Nom d'affichage du profil"
+          example: "Jean"
+        avatarUrl:
+          type: string
+          format: uri
+          example: "https://cdn.primevideo.com/avatars/default_01.png"
+        isKidsProfile:
+          type: boolean
+          description: "Profil enfant avec restrictions de contenu"
+          default: false
+        language:
+          type: string
+          description: "Langue préférée de l'interface (ISO 639-1)"
+          example: "fr"
+        maturityLevel:
+          type: string
+          enum: [KIDS, FAMILY, TEEN, MATURE, ADULT]
+          description: "Niveau de maturité maximum autorisé pour ce profil"
+          example: "ADULT"
+        parentalPinEnabled:
+          type: boolean
+          description: "Code PIN parental activé pour ce profil"
+          default: false
+        autoplayNextEpisode:
+          type: boolean
+          description: "Lecture automatique de l'épisode suivant"
+          default: true
+        autoplayPreviews:
+          type: boolean
+          description: "Lecture automatique des aperçus"
+          default: true
+        defaultAudioLanguage:
+          type: string
+          example: "fr"
+        defaultSubtitleLanguage:
+          type: string
+          example: "fr"
+
+ProfileSummary:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    displayName:
+      type: string
+    avatarUrl:
+      type: string
+      format: uri
+    isKidsProfile:
+      type: boolean
+    maturityLevel:
+      type: string
+
+# --------------------------------------------------------------
+# DEVICE (Appareil enregistré)
+# --------------------------------------------------------------
+Device:
+  allOf:
+    - $ref: './catalog.yaml#/BaseEntity'
+    - type: object
+      required:
+        - name
+        - type
+        - status
+      properties:
+        name:
+          type: string
+          description: "Nom de l'appareil tel que défini par l'utilisateur"
+          example: "TV du salon"
+        type:
+          type: string
+          enum: [SMART_TV, MOBILE, TABLET, WEB, CONSOLE, STREAMING_STICK]
+          description: "Type d'appareil"
+        status:
+          type: string
+          enum: [ACTIVE, REVOKED]
+          description: "Statut de l'appareil"
+        lastUsedAt:
+          type: string
+          format: date-time
+          description: "Date de dernière utilisation"
+          example: "2024-06-01T20:00:00Z"
+        ipAddress:
+          type: string
+          description: "Dernière adresse IP connue (masquée partiellement)"
+          example: "192.168.*.*"
+
+# --------------------------------------------------------------
+# AUTHENTICATION
+# --------------------------------------------------------------
+LoginRequest:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      example: "jean.dupont@example.com"
+    password:
+      type: string
+      format: password
+      minLength: 8
+      example: "SecurePass123!"
+    deviceName:
+      type: string
+      description: "Nom de l'appareil utilisé pour la connexion (pour l'enregistrement)"
+      example: "iPhone de Jean"
+
+RegisterRequest:
+  type: object
+  required:
+    - email
+    - password
+    - country
+  properties:
+    email:
+      type: string
+      format: email
+      example: "nouveau@example.com"
+    password:
+      type: string
+      format: password
+      minLength: 8
+      pattern: '^(?=.*[A-Z])(?=.*[0-9]).{8,}$'
+      description: "Au moins 8 caractères, une majuscule et un chiffre"
+    country:
+      type: string
+      description: "Code pays ISO 3166-1 alpha-2"
+      example: "FR"
+
+TokenResponse:
+  type: object
+  required:
+    - accessToken
+    - refreshToken
+    - tokenType
+    - expiresIn
+  properties:
+    accessToken:
+      type: string
+      description: "JWT d'accès (courte durée — 1h)"
+      example: "eyJhbGciOiJIUzUxMiJ9..."
+    refreshToken:
+      type: string
+      description: "Token de rafraîchissement (longue durée — 30j)"
+      example: "eyJhbGciOiJIUzUxMiJ9..."
+    tokenType:
+      type: string
+      default: "Bearer"
+    expiresIn:
+      type: integer
+      description: "Durée de validité de l'access token en secondes"
+      example: 3600
+
+RefreshTokenRequest:
+  type: object
+  required:
+    - refreshToken
+  properties:
+    refreshToken:
+      type: string
+      description: "Token de rafraîchissement obtenu lors de la connexion"
+
+CreateProfileRequest:
+  type: object
+  required:
+    - displayName
+    - isKidsProfile
+  properties:
+    displayName:
+      type: string
+      minLength: 1
+      maxLength: 50
+      example: "Emma"
+    avatarUrl:
+      type: string
+      format: uri
+    isKidsProfile:
+      type: boolean
+      example: false
+    maturityLevel:
+      type: string
+      enum: [KIDS, FAMILY, TEEN, MATURE, ADULT]
+      example: "ADULT"
+    language:
+      type: string
+      example: "fr"
+
+UpdateProfileRequest:
+  type: object
+  properties:
+    displayName:
+      type: string
+      minLength: 1
+      maxLength: 50
+    avatarUrl:
+      type: string
+      format: uri
+    language:
+      type: string
+    maturityLevel:
+      type: string
+      enum: [KIDS, FAMILY, TEEN, MATURE, ADULT]
+    autoplayNextEpisode:
+      type: boolean
+    autoplayPreviews:
+      type: boolean
+    defaultAudioLanguage:
+      type: string
+    defaultSubtitleLanguage:
+      type: string
+
+SetParentalPinRequest:
+  type: object
+  required:
+    - pin
+  properties:
+    pin:
+      type: string
+      pattern: '^\d{4}$'
+      description: "Code PIN parental à 4 chiffres"
+      example: "1234"

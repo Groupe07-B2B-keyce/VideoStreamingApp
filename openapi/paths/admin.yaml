@@ -1,0 +1,500 @@
+tags:
+  - name: Partner
+    description: "Espace partenaire — soumission et gestion des contenus (ROLE_PARTNER)"
+  - name: Admin
+    description: "Back-office Super Admin — approbation, licences, statistiques globales (ROLE_SUPER_ADMIN)"
+
+paths:
+
+  # ==============================================================
+  # PARTNER — GESTION DE SES PROPRES TITRES
+  # ==============================================================
+
+  /partner/titles:
+    get:
+      tags: [Partner]
+      summary: "Lister ses titres soumis"
+      operationId: listPartnerTitles
+      description: "Retourne uniquement les titres appartenant au partenaire connecté."
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [UPLOADING, PROCESSING, PENDING_REVIEW, APPROVED, REJECTED, PUBLISHED, ARCHIVED]
+      responses:
+        '200':
+          description: "Titres récupérés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../components/schemas/catalog.yaml#/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../components/schemas/admin.yaml#/IngestionJob'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+    post:
+      tags: [Partner]
+      summary: "Soumettre un nouveau titre"
+      operationId: submitTitle
+      description: >
+        Soumet un nouveau film ou série pour ingestion. Le contenu passe par le cycle :
+        PROCESSING → PENDING_REVIEW → APPROVED/REJECTED → PUBLISHED.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/admin.yaml#/SubmitTitleRequest'
+            example:
+              originalTitle: "Le Dernier Voyage"
+              type: "MOVIE"
+              releaseYear: 2024
+              rating: "PG13"
+              synopsis: "Un homme part à la recherche de ses origines..."
+              videoFileUrl: "s3://primevideo-ingestion/partners/indie/le-dernier-voyage.mp4"
+              posterUrl: "s3://primevideo-ingestion/partners/indie/poster.jpg"
+              technicalDetails:
+                resolutionMax: "FHD_1080P"
+                hasHDR: false
+                durationMinutes: 98
+                supportedAudioLanguages: ["fr"]
+                supportedSubtitles: ["fr", "en"]
+      responses:
+        '201':
+          description: "Titre soumis avec succès — en attente de traitement"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Location:
+              description: "URL du job d'ingestion créé"
+              schema:
+                type: string
+                example: "/api/v1/partner/titles/job-001"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/admin.yaml#/IngestionJob'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '413':
+          description: "Fichier trop volumineux"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.com/errors/payload-too-large"
+                title: "Fichier trop volumineux"
+                status: 413
+                detail: "La taille maximale autorisée est de 50 Go."
+                instance: "/api/v1/partner/titles"
+                correlationId: "e5f6a7b8-c9d0-1234-efab-345678901234"
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /partner/titles/{jobId}:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Partner]
+      summary: "Suivre le statut d'une soumission"
+      operationId: getIngestionJob
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Statut du job récupéré"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/admin.yaml#/IngestionJob'
+              example:
+                id: "job-001"
+                titleId: "title-abc"
+                originalTitle: "Le Dernier Voyage"
+                status: "PENDING_REVIEW"
+                reviewNotes: null
+                createdAt: "2024-06-01T10:00:00Z"
+                updatedAt: "2024-06-01T10:45:00Z"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /partner/analytics/{titleId}:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: from
+        in: query
+        description: "Date de début de la période (YYYY-MM-DD)"
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        description: "Date de fin de la période (YYYY-MM-DD)"
+        schema:
+          type: string
+          format: date
+    get:
+      tags: [Partner]
+      summary: "Statistiques de visionnage d'un titre"
+      operationId: getPartnerTitleAnalytics
+      description: "Un partenaire ne peut voir les analytics que de ses propres titres."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Statistiques récupérées avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/admin.yaml#/TitleAnalytics'
+              example:
+                titleId: "title-abc"
+                titleName: "Le Dernier Voyage"
+                totalViews: 12500
+                uniqueViewers: 9800
+                averageWatchDurationMinutes: 72.5
+                completionRate: 0.68
+                totalRevenue: 4520.50
+                currency: "EUR"
+                period:
+                  from: "2024-01-01"
+                  to: "2024-06-30"
+                topCountries:
+                  - countryCode: "FR"
+                    viewCount: 8000
+                  - countryCode: "BE"
+                    viewCount: 1500
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # SUPER ADMIN — VUE GLOBALE & APPROBATION
+  # ==============================================================
+
+  /admin/ingestion-queue:
+    get:
+      tags: [Admin]
+      summary: "File d'attente de révision (tous partenaires)"
+      operationId: getIngestionQueue
+      description: "Liste tous les titres en PENDING_REVIEW. Accès ROLE_SUPER_ADMIN uniquement."
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
+      responses:
+        '200':
+          description: "File d'attente récupérée"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../components/schemas/catalog.yaml#/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../components/schemas/admin.yaml#/IngestionJob'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /admin/ingestion-queue/{jobId}/status:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Admin]
+      summary: "Approuver ou rejeter une soumission"
+      operationId: updateIngestionStatus
+      description: "Permet à un Super Admin d'approuver (APPROVED) ou de rejeter (REJECTED) une soumission avec des notes."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/admin.yaml#/UpdateIngestionStatusRequest'
+            examples:
+              approve:
+                summary: "Approuver le contenu"
+                value:
+                  status: "APPROVED"
+                  reviewNotes: "Contenu conforme aux standards."
+              reject:
+                summary: "Rejeter le contenu"
+                value:
+                  status: "REJECTED"
+                  rejectionCode: "LOW_QUALITY"
+                  reviewNotes: "La résolution est insuffisante. Merci de soumettre en 1080p minimum."
+      responses:
+        '200':
+          description: "Statut mis à jour avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/admin.yaml#/IngestionJob'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /admin/titles/{titleId}/licenses:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Admin]
+      summary: "Lister les licences d'un titre"
+      operationId: listTitleLicenses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Licences récupérées"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/admin.yaml#/License'
+              example:
+                - id: "lic-001"
+                  titleId: "title-abc"
+                  countryCode: "FR"
+                  accessType: "INCLUDED"
+                  startDate: "2024-01-01"
+                  endDate: "2025-12-31"
+                  isExclusive: false
+                  createdAt: "2024-01-01T00:00:00Z"
+                  updatedAt: "2024-01-01T00:00:00Z"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+    post:
+      tags: [Admin]
+      summary: "Créer une licence pour un pays"
+      operationId: createLicense
+      description: "Crée une règle de diffusion pour un pays spécifique. Supporte le modèle SVOD + TVOD."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/admin.yaml#/CreateLicenseRequest'
+            example:
+              countryCode: "US"
+              accessType: "RENT"
+              rentalPrice: 3.99
+              purchasePrice: 12.99
+              currency: "USD"
+              startDate: "2024-06-01"
+              endDate: "2026-06-01"
+              isExclusive: false
+      responses:
+        '201':
+          description: "Licence créée avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Location:
+              schema:
+                type: string
+                example: "/api/v1/admin/titles/title-abc/licenses/lic-002"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/admin.yaml#/License'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '409':
+          description: "Une licence existe déjà pour ce pays"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: "Statistiques globales de la plateforme"
+      operationId: getGlobalStats
+      description: "Tableau de bord du Super Admin avec KPIs globaux."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Statistiques globales récupérées"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/admin.yaml#/GlobalPlatformStats'
+              example:
+                totalUsers: 2500000
+                activeSubscriptions: 1800000
+                totalTitles: 12500
+                totalPartners: 380
+                totalViewsThisMonth: 85000000
+                newRegistrationsThisMonth: 45000
+                revenueThisMonth: 3200000.00
+                currency: "EUR"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'

@@ -9,6 +9,74 @@ servers:
 security:
   - bearerAuth: []
 paths:
+  # ---- SOCIAL & ENGAGEMENT ----
+  /profiles/{profileId}/watchlist:
+    $ref: './paths/social.yaml#/paths/~1profiles~1{profileId}~1watchlist'
+  /profiles/{profileId}/watchlist/{watchlistItemId}:
+    $ref: './paths/social.yaml#/paths/~1profiles~1{profileId}~1watchlist~1{watchlistItemId}'
+  /titles/{titleId}/reviews:
+    $ref: './paths/social.yaml#/paths/~1titles~1{titleId}~1reviews'
+  /titles/{titleId}/reviews/{reviewId}:
+    $ref: './paths/social.yaml#/paths/~1titles~1{titleId}~1reviews~1{reviewId}'
+  /profiles/{profileId}/recommendations:
+    $ref: './paths/social.yaml#/paths/~1profiles~1{profileId}~1recommendations'
+  /groupwatch:
+    $ref: './paths/social.yaml#/paths/~1groupwatch'
+  /groupwatch/{sessionId}:
+    $ref: './paths/social.yaml#/paths/~1groupwatch~1{sessionId}'
+  /groupwatch/{sessionId}/join:
+    $ref: './paths/social.yaml#/paths/~1groupwatch~1{sessionId}~1join'
+  /groupwatch/{sessionId}/control:
+    $ref: './paths/social.yaml#/paths/~1groupwatch~1{sessionId}~1control'
+  /groupwatch/{sessionId}/leave:
+    $ref: './paths/social.yaml#/paths/~1groupwatch~1{sessionId}~1leave'
+  # ---- PLAYBACK & X-RAY ----
+  /titles/{titleId}/playback:
+    $ref: './paths/playback.yaml#/paths/~1titles~1{titleId}~1playback'
+  /profiles/{profileId}/watch-progress:
+    $ref: './paths/playback.yaml#/paths/~1profiles~1{profileId}~1watch-progress'
+  /profiles/{profileId}/watch-progress/{titleId}:
+    $ref: './paths/playback.yaml#/paths/~1profiles~1{profileId}~1watch-progress~1{titleId}'
+  /titles/{titleId}/xray:
+    $ref: './paths/playback.yaml#/paths/~1titles~1{titleId}~1xray'
+  /admin/titles/{titleId}/xray:
+    $ref: './paths/playback.yaml#/paths/~1admin~1titles~1{titleId}~1xray'
+  # ---- ADMIN & LICENSING ----
+  /partner/titles:
+    $ref: './paths/admin.yaml#/paths/~1partner~1titles'
+  /partner/titles/{jobId}:
+    $ref: './paths/admin.yaml#/paths/~1partner~1titles~1{jobId}'
+  /partner/analytics/{titleId}:
+    $ref: './paths/admin.yaml#/paths/~1partner~1analytics~1{titleId}'
+  /admin/ingestion-queue:
+    $ref: './paths/admin.yaml#/paths/~1admin~1ingestion-queue'
+  /admin/ingestion-queue/{jobId}/status:
+    $ref: './paths/admin.yaml#/paths/~1admin~1ingestion-queue~1{jobId}~1status'
+  /admin/titles/{titleId}/licenses:
+    $ref: './paths/admin.yaml#/paths/~1admin~1titles~1{titleId}~1licenses'
+  /admin/stats:
+    $ref: './paths/admin.yaml#/paths/~1admin~1stats'
+  # ---- IDENTITY & ACCESS ----
+  /auth/register:
+    $ref: './paths/identity.yaml#/paths/~1auth~1register'
+  /auth/login:
+    $ref: './paths/identity.yaml#/paths/~1auth~1login'
+  /auth/refresh:
+    $ref: './paths/identity.yaml#/paths/~1auth~1refresh'
+  /auth/logout:
+    $ref: './paths/identity.yaml#/paths/~1auth~1logout'
+  /accounts/me:
+    $ref: './paths/identity.yaml#/paths/~1accounts~1me'
+  /accounts/me/profiles:
+    $ref: './paths/identity.yaml#/paths/~1accounts~1me~1profiles'
+  /accounts/me/profiles/{profileId}:
+    $ref: './paths/identity.yaml#/paths/~1accounts~1me~1profiles~1{profileId}'
+  /accounts/me/profiles/{profileId}/parental-pin:
+    $ref: './paths/identity.yaml#/paths/~1accounts~1me~1profiles~1{profileId}~1parental-pin'
+  /accounts/me/devices:
+    $ref: './paths/identity.yaml#/paths/~1accounts~1me~1devices'
+  /accounts/me/devices/{deviceId}:
+    $ref: './paths/identity.yaml#/paths/~1accounts~1me~1devices~1{deviceId}'
   # ---- CORE CATALOG ----
   /titles:
     $ref: './paths/catalog.yaml#/paths/~1titles'
@@ -57,6 +125,35 @@ components:
       $ref: './components/schemas/errors.yaml#/ProblemDetails'
     ValidationError:
       $ref: './components/schemas/errors.yaml#/ValidationError'
+    # Playback schemas
+    WatchSession:
+      $ref: './components/schemas/playback.yaml#/WatchSession'
+    PlaybackToken:
+      $ref: './components/schemas/playback.yaml#/PlaybackToken'
+    TimelineEvent:
+      $ref: './components/schemas/playback.yaml#/TimelineEvent'
+    # Admin schemas
+    IngestionJob:
+      $ref: './components/schemas/admin.yaml#/IngestionJob'
+    License:
+      $ref: './components/schemas/admin.yaml#/License'
+    TitleAnalytics:
+      $ref: './components/schemas/admin.yaml#/TitleAnalytics'
+    GlobalPlatformStats:
+      $ref: './components/schemas/admin.yaml#/GlobalPlatformStats'
+    # Identity schemas
+    Account:
+      $ref: './components/schemas/identity.yaml#/Account'
+    AccountSummary:
+      $ref: './components/schemas/identity.yaml#/AccountSummary'
+    Profile:
+      $ref: './components/schemas/identity.yaml#/Profile'
+    ProfileSummary:
+      $ref: './components/schemas/identity.yaml#/ProfileSummary'
+    Device:
+      $ref: './components/schemas/identity.yaml#/Device'
+    TokenResponse:
+      $ref: './components/schemas/identity.yaml#/TokenResponse'
     # Catalog schemas
     Title:
       $ref: './components/schemas/catalog.yaml#/Title'
@@ -74,3 +171,22 @@ components:
       $ref: './components/schemas/catalog.yaml#/CastingMember'
     Person:
       $ref: './components/schemas/catalog.yaml#/Person'
+    # Social schemas
+    WatchlistItem:
+      $ref: './components/schemas/social.yaml#/WatchlistItem'
+    WatchlistPage:
+      $ref: './components/schemas/social.yaml#/WatchlistPage'
+    Review:
+      $ref: './components/schemas/social.yaml#/Review'
+    ReviewSummary:
+      $ref: './components/schemas/social.yaml#/ReviewSummary'
+    ReviewPage:
+      $ref: './components/schemas/social.yaml#/ReviewPage'
+    Recommendation:
+      $ref: './components/schemas/social.yaml#/Recommendation'
+    RecommendationPage:
+      $ref: './components/schemas/social.yaml#/RecommendationPage'
+    GroupWatchSession:
+      $ref: './components/schemas/social.yaml#/GroupWatchSession'
+    GroupWatchParticipant:
+      $ref: './components/schemas/social.yaml#/GroupWatchParticipant'

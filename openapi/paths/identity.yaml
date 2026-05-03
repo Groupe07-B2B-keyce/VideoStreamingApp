@@ -1,0 +1,599 @@
+tags:
+  - name: Authentication
+    description: "Authentification, inscription et gestion des tokens JWT"
+  - name: Accounts
+    description: "Gestion du compte utilisateur (infos de facturation, abonnement)"
+  - name: Profiles
+    description: "Gestion des profils de visionnage (multi-profils avec contrôle parental)"
+  - name: Devices
+    description: "Gestion des appareils enregistrés"
+
+paths:
+
+  # ==============================================================
+  # AUTHENTICATION
+  # ==============================================================
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: "Créer un nouveau compte"
+      operationId: registerAccount
+      description: "Inscription d'un nouvel utilisateur. Un profil par défaut est créé automatiquement."
+      security: []   # Endpoint public — pas de JWT requis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/identity.yaml#/RegisterRequest'
+            example:
+              email: "nouveau@example.com"
+              password: "SecurePass123!"
+              country: "FR"
+      responses:
+        '201':
+          description: "Compte créé avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Location:
+              description: "URL du compte créé"
+              schema:
+                type: string
+                example: "/api/v1/accounts/me"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/identity.yaml#/TokenResponse'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '409':
+          description: "Un compte avec cet email existe déjà"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.com/errors/email-already-exists"
+                title: "Email déjà utilisé"
+                status: 409
+                detail: "Un compte avec l'adresse jean@example.com existe déjà."
+                instance: "/api/v1/auth/register"
+                correlationId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: "Connexion et obtention des tokens JWT"
+      operationId: login
+      description: "Authentifie un utilisateur et retourne un access token (1h) et un refresh token (30j)."
+      security: []   # Endpoint public
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/identity.yaml#/LoginRequest'
+            example:
+              email: "jean.dupont@example.com"
+              password: "SecurePass123!"
+              deviceName: "iPhone de Jean"
+      responses:
+        '200':
+          description: "Authentification réussie"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/identity.yaml#/TokenResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIn0..."
+                refreshToken: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWZyZXNoIn0..."
+                tokenType: "Bearer"
+                expiresIn: 3600
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          description: "Identifiants invalides"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.com/errors/invalid-credentials"
+                title: "Identifiants invalides"
+                status: 401
+                detail: "L'email ou le mot de passe est incorrect."
+                instance: "/api/v1/auth/login"
+                correlationId: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: "Renouveler l'access token"
+      operationId: refreshToken
+      description: "Échange un refresh token valide contre un nouvel access token. Implémente la rotation des refresh tokens."
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/identity.yaml#/RefreshTokenRequest'
+      responses:
+        '200':
+          description: "Tokens renouvelés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/identity.yaml#/TokenResponse'
+        '401':
+          description: "Refresh token invalide ou expiré"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: "Déconnexion et invalidation du token"
+      operationId: logout
+      description: "Invalide le refresh token courant (blacklist). L'access token expirera naturellement."
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: "Déconnexion réussie (aucun contenu)"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # ACCOUNTS
+  # ==============================================================
+
+  /accounts/me:
+    get:
+      tags:
+        - Accounts
+      summary: "Obtenir les informations du compte connecté"
+      operationId: getMyAccount
+      description: "Retourne les informations du compte de l'utilisateur authentifié."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Compte récupéré avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/identity.yaml#/AccountSummary'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                email: "jean.dupont@example.com"
+                subscriptionStatus: "ACTIVE"
+                subscriptionPlan: "PREMIUM"
+                subscriptionExpiresAt: "2025-12-31T23:59:59Z"
+                country: "FR"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # PROFILES
+  # ==============================================================
+
+  /accounts/me/profiles:
+    get:
+      tags:
+        - Profiles
+      summary: "Lister les profils du compte"
+      operationId: listProfiles
+      description: "Retourne tous les profils associés au compte connecté (max 5 profils par compte)."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Profils récupérés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/identity.yaml#/ProfileSummary'
+              example:
+                - id: "profile-001"
+                  displayName: "Jean"
+                  avatarUrl: "https://cdn.primevideo.com/avatars/avatar_01.png"
+                  isKidsProfile: false
+                  maturityLevel: "ADULT"
+                - id: "profile-002"
+                  displayName: "Emma (Enfants)"
+                  avatarUrl: "https://cdn.primevideo.com/avatars/kids_02.png"
+                  isKidsProfile: true
+                  maturityLevel: "KIDS"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+    post:
+      tags:
+        - Profiles
+      summary: "Créer un nouveau profil"
+      operationId: createProfile
+      description: "Crée un nouveau profil. Un compte peut avoir au maximum 5 profils."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/identity.yaml#/CreateProfileRequest'
+            example:
+              displayName: "Emma"
+              isKidsProfile: true
+              maturityLevel: "KIDS"
+              language: "fr"
+      responses:
+        '201':
+          description: "Profil créé avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+            Location:
+              description: "URL du profil créé"
+              schema:
+                type: string
+                example: "/api/v1/accounts/me/profiles/profile-003"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/identity.yaml#/Profile'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '409':
+          description: "Nombre maximal de profils atteint (5)"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.com/errors/max-profiles-reached"
+                title: "Limite de profils atteinte"
+                status: 409
+                detail: "Un compte ne peut pas avoir plus de 5 profils."
+                instance: "/api/v1/accounts/me/profiles"
+                correlationId: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /accounts/me/profiles/{profileId}:
+    parameters:
+      - name: profileId
+        in: path
+        required: true
+        description: "Identifiant unique du profil"
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Profiles
+      summary: "Obtenir les détails d'un profil"
+      operationId: getProfileById
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Profil récupéré avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/identity.yaml#/Profile'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+    patch:
+      tags:
+        - Profiles
+      summary: "Mettre à jour un profil (modification partielle)"
+      operationId: updateProfile
+      description: "Met à jour partiellement les informations d'un profil. Seuls les champs fournis sont modifiés."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/identity.yaml#/UpdateProfileRequest'
+            example:
+              displayName: "Emma 👧"
+              autoplayNextEpisode: false
+              defaultAudioLanguage: "fr"
+      responses:
+        '200':
+          description: "Profil mis à jour avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/identity.yaml#/Profile'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+    delete:
+      tags:
+        - Profiles
+      summary: "Supprimer un profil"
+      operationId: deleteProfile
+      description: "Supprime un profil. Le profil principal (premier créé) ne peut pas être supprimé."
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: "Profil supprimé avec succès (aucun contenu)"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          description: "Impossible de supprimer le profil principal"
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.com/errors/cannot-delete-primary-profile"
+                title: "Suppression impossible"
+                status: 403
+                detail: "Le profil principal d'un compte ne peut pas être supprimé."
+                instance: "/api/v1/accounts/me/profiles/profile-001"
+                correlationId: "d4e5f6a7-b8c9-0123-defa-234567890123"
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /accounts/me/profiles/{profileId}/parental-pin:
+    parameters:
+      - name: profileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags:
+        - Profiles
+      summary: "Définir ou modifier le code PIN parental"
+      operationId: setParentalPin
+      description: "Active et définit un code PIN à 4 chiffres pour protéger l'accès à ce profil et contrôler le visionnage de contenu sensible."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/identity.yaml#/SetParentalPinRequest'
+            example:
+              pin: "1234"
+      responses:
+        '200':
+          description: "PIN parental défini avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+        '400':
+          $ref: '../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  # ==============================================================
+  # DEVICES
+  # ==============================================================
+
+  /accounts/me/devices:
+    get:
+      tags:
+        - Devices
+      summary: "Lister les appareils enregistrés"
+      operationId: listDevices
+      description: "Retourne tous les appareils enregistrés sur le compte. Utile pour gérer les connexions actives."
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "Appareils récupérés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/identity.yaml#/Device'
+              example:
+                - id: "device-001"
+                  name: "TV du salon"
+                  type: "SMART_TV"
+                  status: "ACTIVE"
+                  lastUsedAt: "2024-06-01T20:00:00Z"
+                  ipAddress: "192.168.*.*"
+                  createdAt: "2024-01-01T00:00:00Z"
+                  updatedAt: "2024-06-01T20:00:00Z"
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'
+
+  /accounts/me/devices/{deviceId}:
+    parameters:
+      - name: deviceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    delete:
+      tags:
+        - Devices
+      summary: "Révoquer un appareil (déconnexion forcée)"
+      operationId: revokeDevice
+      description: "Révoque un appareil enregistré, forçant la déconnexion sur cet appareil. Tous les tokens associés à cet appareil sont invalidés."
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: "Appareil révoqué avec succès (aucun contenu)"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../components/headers.yaml#/RateLimitReset'
+        '401':
+          $ref: '../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../components/responses.yaml#/InternalServerError'

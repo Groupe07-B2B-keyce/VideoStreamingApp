@@ -1,0 +1,726 @@
+tags:
+  - name: Watchlist
+    description: "Gestion de la liste de visionnage (Watchlist) par profil"
+  - name: Reviews
+    description: "Avis et notations des utilisateurs sur les titres"
+  - name: Recommendations
+    description: "Recommandations personnalisées basées sur le profil"
+  - name: GroupWatch
+    description: "Sessions de visionnage synchronisé en groupe"
+
+paths:
+  # ============================================================
+  # WATCHLIST
+  # ============================================================
+  /profiles/{profileId}/watchlist:
+    parameters:
+      - name: profileId
+        in: path
+        required: true
+        description: "Identifiant du profil"
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Watchlist]
+      summary: "Lister la Watchlist d'un profil"
+      operationId: getWatchlist
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../../components/parameters.yaml#/PageParam'
+        - $ref: '../../components/parameters.yaml#/LimitParam'
+      responses:
+        '200':
+          description: "Watchlist récupérée avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+            Cache-Control:
+              schema:
+                type: string
+                example: "private, max-age=60"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/WatchlistPage'
+              example:
+                data:
+                  - id: "wl-5f3e9a1b"
+                    titleId: "ttl-8a2b4c6d"
+                    addedAt: "2026-03-15T20:30:00Z"
+                    title:
+                      id: "ttl-8a2b4c6d"
+                      name: "Dune: Part Two"
+                      type: MOVIE
+                      posterUrl: "https://cdn.primevideo.example.com/posters/dune2.webp"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 37
+                  totalPages: 2
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+    post:
+      tags: [Watchlist]
+      summary: "Ajouter un titre à la Watchlist"
+      operationId: addToWatchlist
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/social.yaml#/AddToWatchlistRequest'
+            example:
+              titleId: "ttl-8a2b4c6d"
+      responses:
+        '201':
+          description: "Titre ajouté à la Watchlist avec succès"
+          headers:
+            Location:
+              description: "URL de l'entrée Watchlist créée"
+              schema:
+                type: string
+                example: "/api/v1/profiles/prf-1a2b3c4d/watchlist/wl-5f3e9a1b"
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/WatchlistItem'
+        '400':
+          $ref: '../../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../../components/responses.yaml#/Forbidden'
+        '404':
+          description: "Titre introuvable"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.example.com/errors/not-found"
+                title: "Titre introuvable"
+                status: 404
+                detail: "Le titre ttl-8a2b4c6d est introuvable ou n'est pas disponible."
+                instance: "/api/v1/profiles/prf-1a2b3c4d/watchlist"
+        '409':
+          description: "Le titre est déjà dans la Watchlist"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.example.com/errors/conflict"
+                title: "Conflit de ressource"
+                status: 409
+                detail: "Ce titre est déjà présent dans votre Watchlist."
+                instance: "/api/v1/profiles/prf-1a2b3c4d/watchlist"
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  /profiles/{profileId}/watchlist/{watchlistItemId}:
+    parameters:
+      - name: profileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: watchlistItemId
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      tags: [Watchlist]
+      summary: "Supprimer un titre de la Watchlist"
+      operationId: removeFromWatchlist
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: "Titre retiré de la Watchlist avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  # ============================================================
+  # REVIEWS & RATINGS
+  # ============================================================
+  /titles/{titleId}/reviews:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sort
+        in: query
+        required: false
+        description: "Critère de tri des avis"
+        schema:
+          type: string
+          enum: [MOST_RECENT, MOST_HELPFUL, HIGHEST_RATING, LOWEST_RATING]
+          default: MOST_HELPFUL
+    get:
+      tags: [Reviews]
+      summary: "Lister les avis d'un titre"
+      operationId: listReviews
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../../components/parameters.yaml#/PageParam'
+        - $ref: '../../components/parameters.yaml#/LimitParam'
+      responses:
+        '200':
+          description: "Avis récupérés avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+            Cache-Control:
+              schema:
+                type: string
+                example: "public, max-age=300"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/ReviewPage'
+              example:
+                summary:
+                  titleId: "ttl-8a2b4c6d"
+                  averageRating: 4.2
+                  totalReviews: 1847
+                  ratingDistribution:
+                    "1": 52
+                    "2": 89
+                    "3": 201
+                    "4": 613
+                    "5": 892
+                data:
+                  - id: "rev-9d1e2f3a"
+                    rating: 5
+                    comment: "Un chef-d'œuvre absolu."
+                    isVerifiedPurchase: true
+                    helpfulVotes: 312
+                    createdAt: "2026-03-10T14:22:00Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 1847
+                  totalPages: 93
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+    post:
+      tags: [Reviews]
+      summary: "Publier un avis sur un titre"
+      operationId: createReview
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/social.yaml#/CreateReviewRequest'
+            example:
+              rating: 5
+              comment: "Un chef-d'œuvre de la science-fiction moderne."
+      responses:
+        '201':
+          description: "Avis publié avec succès"
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "/api/v1/titles/ttl-8a2b4c6d/reviews/rev-9d1e2f3a"
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/Review'
+        '400':
+          $ref: '../../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '409':
+          description: "L'utilisateur a déjà publié un avis pour ce titre"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.example.com/errors/conflict"
+                title: "Avis déjà existant"
+                status: 409
+                detail: "Vous avez déjà soumis un avis pour ce titre. Utilisez PATCH pour le modifier."
+                instance: "/api/v1/titles/ttl-8a2b4c6d/reviews"
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  /titles/{titleId}/reviews/{reviewId}:
+    parameters:
+      - name: titleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: reviewId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Reviews]
+      summary: "Modifier son propre avis"
+      operationId: updateReview
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/social.yaml#/CreateReviewRequest'
+      responses:
+        '200':
+          description: "Avis mis à jour avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/Review'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+    delete:
+      tags: [Reviews]
+      summary: "Supprimer son propre avis"
+      operationId: deleteReview
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: "Avis supprimé avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  # ============================================================
+  # RECOMMENDATIONS
+  # ============================================================
+  /profiles/{profileId}/recommendations:
+    parameters:
+      - name: profileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Recommendations]
+      summary: "Obtenir les recommandations personnalisées d'un profil"
+      operationId: getRecommendations
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '../../components/parameters.yaml#/LimitParam'
+        - name: reason
+          in: query
+          required: false
+          description: "Filtrer par type de recommandation"
+          schema:
+            type: string
+            enum:
+              - BECAUSE_YOU_WATCHED
+              - TRENDING_IN_YOUR_REGION
+              - SIMILAR_TO_YOUR_WATCHLIST
+              - TOP_PICKS_FOR_YOU
+              - NEW_RELEASE_IN_YOUR_GENRE
+      responses:
+        '200':
+          description: "Recommandations personnalisées récupérées"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+            Cache-Control:
+              schema:
+                type: string
+                example: "private, max-age=1800"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/RecommendationPage'
+              example:
+                data:
+                  - titleId: "ttl-2a3b4c5d"
+                    score: 0.97
+                    reason: BECAUSE_YOU_WATCHED
+                    reasonContext: "Interstellar"
+                    title:
+                      id: "ttl-2a3b4c5d"
+                      name: "Arrival"
+                      type: MOVIE
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 50
+                  totalPages: 3
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  # ============================================================
+  # GROUP WATCH
+  # ============================================================
+  /groupwatch:
+    post:
+      tags: [GroupWatch]
+      summary: "Créer une session GroupWatch"
+      operationId: createGroupWatchSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/social.yaml#/CreateGroupWatchRequest'
+            example:
+              titleId: "ttl-8a2b4c6d"
+              maxParticipants: 10
+      responses:
+        '201':
+          description: "Session GroupWatch créée avec succès"
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "/api/v1/groupwatch/gw-4a5b6c7d"
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+              example:
+                id: "gw-4a5b6c7d-8e9f"
+                titleId: "ttl-8a2b4c6d"
+                hostProfileId: "prf-1a2b3c4d"
+                status: WAITING
+                inviteCode: "PRIMEGW7"
+                currentPositionSeconds: 0
+                maxParticipants: 10
+                participants: []
+                createdAt: "2026-05-03T10:00:00Z"
+        '400':
+          $ref: '../../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  /groupwatch/{sessionId}:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        description: "Identifiant de la session GroupWatch"
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [GroupWatch]
+      summary: "Obtenir l'état d'une session GroupWatch"
+      operationId: getGroupWatchSession
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: "État de la session récupéré"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          $ref: '../../components/responses.yaml#/Forbidden'
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  /groupwatch/{sessionId}/join:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [GroupWatch]
+      summary: "Rejoindre une session GroupWatch via code d'invitation"
+      operationId: joinGroupWatchSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - inviteCode
+              properties:
+                inviteCode:
+                  type: string
+                  description: "Code d'invitation à 8 caractères"
+                  example: "PRIMEGW7"
+      responses:
+        '200':
+          description: "Session rejointe avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+        '400':
+          $ref: '../../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          description: "Session pleine ou code invalide"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.example.com/errors/forbidden"
+                title: "Accès refusé"
+                status: 403
+                detail: "La session est complète ou le code d'invitation est invalide."
+                instance: "/api/v1/groupwatch/gw-4a5b6c7d/join"
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  /groupwatch/{sessionId}/control:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [GroupWatch]
+      summary: "Contrôler la lecture (PLAY/PAUSE/SEEK) — Hôte uniquement"
+      operationId: controlGroupWatch
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/social.yaml#/GroupWatchControlRequest'
+            examples:
+              pause:
+                summary: "Mettre en pause"
+                value:
+                  action: PAUSE
+              seek:
+                summary: "Aller à une position"
+                value:
+                  action: SEEK
+                  positionSeconds: 2340
+      responses:
+        '200':
+          description: "Commande de lecture appliquée et synchronisée"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+        '400':
+          $ref: '../../components/responses.yaml#/BadRequest'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '403':
+          description: "Seul l'hôte peut contrôler la lecture"
+          content:
+            application/json:
+              schema:
+                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+              example:
+                type: "https://api.primevideo.example.com/errors/forbidden"
+                title: "Action réservée à l'hôte"
+                status: 403
+                detail: "Seul le profil hôte peut envoyer des commandes de contrôle."
+                instance: "/api/v1/groupwatch/gw-4a5b6c7d/control"
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'
+
+  /groupwatch/{sessionId}/leave:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [GroupWatch]
+      summary: "Quitter une session GroupWatch"
+      operationId: leaveGroupWatchSession
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: "Session quittée avec succès"
+          headers:
+            X-RateLimit-Limit:
+              $ref: '../../components/headers.yaml#/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '../../components/headers.yaml#/RateLimitReset'
+        '401':
+          $ref: '../../components/responses.yaml#/Unauthorized'
+        '404':
+          $ref: '../../components/responses.yaml#/NotFound'
+        '429':
+          $ref: '../../components/responses.yaml#/RateLimitError'
+        '500':
+          $ref: '../../components/responses.yaml#/InternalServerError'

@@ -1,0 +1,370 @@
+# ==============================================================
+# SOCIAL & ENGAGEMENT — SCHÉMAS DE DONNÉES
+# ==============================================================
+
+# --------------------------------------------------------------
+# WATCHLIST
+# --------------------------------------------------------------
+
+WatchlistItem:
+  type: object
+  description: "Un élément dans la liste de visionnage (Watchlist) d'un profil"
+  required:
+    - id
+    - titleId
+    - addedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: "Identifiant unique de l'entrée dans la watchlist"
+      example: "wl-5f3e9a1b-2c4d"
+    titleId:
+      type: string
+      format: uuid
+      description: "Identifiant du titre ajouté"
+      example: "ttl-8a2b4c6d"
+    addedAt:
+      type: string
+      format: date-time
+      description: "Date et heure d'ajout à la watchlist"
+      example: "2026-03-15T20:30:00Z"
+    title:
+      description: "Résumé du titre (fourni en réponse pour éviter un 2ème appel)"
+      allOf:
+        - $ref: '../../components/schemas/catalog.yaml#/TitleSummary'
+
+AddToWatchlistRequest:
+  type: object
+  required:
+    - titleId
+  properties:
+    titleId:
+      type: string
+      format: uuid
+      description: "Identifiant du titre à ajouter"
+      example: "ttl-8a2b4c6d"
+
+WatchlistPage:
+  type: object
+  description: "Liste paginée des éléments de la watchlist"
+  required:
+    - data
+    - pagination
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/WatchlistItem'
+    pagination:
+      $ref: '../../components/schemas/catalog.yaml#/Pagination'
+
+# --------------------------------------------------------------
+# REVIEWS & RATINGS (Avis et Notations)
+# --------------------------------------------------------------
+
+Review:
+  type: object
+  description: "Avis et notation d'un utilisateur sur un titre"
+  required:
+    - id
+    - titleId
+    - profileId
+    - rating
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: "Identifiant unique de l'avis"
+      example: "rev-9d1e2f3a"
+    titleId:
+      type: string
+      format: uuid
+      example: "ttl-8a2b4c6d"
+    profileId:
+      type: string
+      format: uuid
+      example: "prf-1a2b3c4d"
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: "Note de 1 à 5 étoiles"
+      example: 4
+    comment:
+      type: string
+      maxLength: 2000
+      description: "Commentaire textuel (optionnel)"
+      example: "Film absolument captivant, effets spéciaux époustouflants !"
+    isVerifiedPurchase:
+      type: boolean
+      description: "Indique si l'utilisateur a effectivement visionné le titre"
+      example: true
+    helpfulVotes:
+      type: integer
+      description: "Nombre de votes 'utile' reçus"
+      example: 42
+    createdAt:
+      type: string
+      format: date-time
+      example: "2026-03-10T14:22:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      example: "2026-03-11T09:15:00Z"
+
+ReviewSummary:
+  type: object
+  description: "Résumé agrégé des avis d'un titre"
+  required:
+    - titleId
+    - averageRating
+    - totalReviews
+    - ratingDistribution
+  properties:
+    titleId:
+      type: string
+      format: uuid
+    averageRating:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 5
+      description: "Note moyenne sur 5"
+      example: 4.2
+    totalReviews:
+      type: integer
+      description: "Nombre total d'avis"
+      example: 1847
+    ratingDistribution:
+      type: object
+      description: "Distribution des notes (nb d'avis par étoile)"
+      properties:
+        "1":
+          type: integer
+          example: 52
+        "2":
+          type: integer
+          example: 89
+        "3":
+          type: integer
+          example: 201
+        "4":
+          type: integer
+          example: 613
+        "5":
+          type: integer
+          example: 892
+
+CreateReviewRequest:
+  type: object
+  required:
+    - rating
+  properties:
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      example: 5
+    comment:
+      type: string
+      maxLength: 2000
+      example: "Un chef-d'œuvre de la science-fiction moderne."
+
+ReviewPage:
+  type: object
+  description: "Liste paginée des avis"
+  required:
+    - data
+    - summary
+    - pagination
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/Review'
+    summary:
+      $ref: '#/ReviewSummary'
+    pagination:
+      $ref: '../../components/schemas/catalog.yaml#/Pagination'
+
+# --------------------------------------------------------------
+# RECOMMENDATIONS (Recommandations personnalisées)
+# --------------------------------------------------------------
+
+Recommendation:
+  type: object
+  description: "Une recommandation personnalisée pour un profil"
+  required:
+    - titleId
+    - score
+    - reason
+  properties:
+    titleId:
+      type: string
+      format: uuid
+    score:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 1
+      description: "Score de pertinence de la recommandation (0=faible, 1=très pertinente)"
+      example: 0.95
+    reason:
+      type: string
+      description: "Raison de la recommandation (humainement lisible)"
+      enum:
+        - BECAUSE_YOU_WATCHED
+        - TRENDING_IN_YOUR_REGION
+        - SIMILAR_TO_YOUR_WATCHLIST
+        - TOP_PICKS_FOR_YOU
+        - NEW_RELEASE_IN_YOUR_GENRE
+      example: BECAUSE_YOU_WATCHED
+    reasonContext:
+      type: string
+      description: "Contexte de la raison (ex: nom du titre ayant déclenché la reco)"
+      example: "Interstellar"
+    title:
+      allOf:
+        - $ref: '../../components/schemas/catalog.yaml#/TitleSummary'
+
+RecommendationPage:
+  type: object
+  required:
+    - data
+    - pagination
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/Recommendation'
+    pagination:
+      $ref: '../../components/schemas/catalog.yaml#/Pagination'
+
+# --------------------------------------------------------------
+# GROUP WATCH (Visionnage en groupe)
+# --------------------------------------------------------------
+
+GroupWatchSession:
+  type: object
+  description: "Session de visionnage en groupe synchronisé"
+  required:
+    - id
+    - titleId
+    - hostProfileId
+    - status
+    - createdAt
+    - inviteCode
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: "Identifiant unique de la session GroupWatch"
+      example: "gw-4a5b6c7d-8e9f"
+    titleId:
+      type: string
+      format: uuid
+      description: "Titre en cours de visionnage"
+    episodeId:
+      type: string
+      format: uuid
+      description: "Épisode spécifique (si série)"
+      nullable: true
+    hostProfileId:
+      type: string
+      format: uuid
+      description: "Profil de l'hôte de la session"
+    status:
+      type: string
+      enum:
+        - WAITING
+        - PLAYING
+        - PAUSED
+        - ENDED
+      example: PLAYING
+    inviteCode:
+      type: string
+      description: "Code d'invitation à 8 caractères à partager"
+      example: "PRIMEGW7"
+    currentPositionSeconds:
+      type: integer
+      description: "Position actuelle de lecture en secondes (synchronisée)"
+      example: 1842
+    maxParticipants:
+      type: integer
+      default: 100
+      description: "Nombre maximum de participants"
+    participants:
+      type: array
+      items:
+        $ref: '#/GroupWatchParticipant'
+    createdAt:
+      type: string
+      format: date-time
+
+GroupWatchParticipant:
+  type: object
+  description: "Participant à une session GroupWatch"
+  required:
+    - profileId
+    - displayName
+    - joinedAt
+    - role
+  properties:
+    profileId:
+      type: string
+      format: uuid
+    displayName:
+      type: string
+      example: "Haibonwa"
+    avatarUrl:
+      type: string
+      format: uri
+      example: "https://cdn.primevideo.example.com/avatars/user42.webp"
+    role:
+      type: string
+      enum:
+        - HOST
+        - VIEWER
+      example: VIEWER
+    joinedAt:
+      type: string
+      format: date-time
+
+CreateGroupWatchRequest:
+  type: object
+  required:
+    - titleId
+  properties:
+    titleId:
+      type: string
+      format: uuid
+      example: "ttl-8a2b4c6d"
+    episodeId:
+      type: string
+      format: uuid
+      nullable: true
+    maxParticipants:
+      type: integer
+      minimum: 2
+      maximum: 100
+      default: 100
+
+GroupWatchControlRequest:
+  type: object
+  description: "Commande de contrôle de la lecture (hôte uniquement)"
+  required:
+    - action
+  properties:
+    action:
+      type: string
+      enum:
+        - PLAY
+        - PAUSE
+        - SEEK
+      example: SEEK
+    positionSeconds:
+      type: integer
+      description: "Requis si action=SEEK. Position cible en secondes."
+      example: 2340
