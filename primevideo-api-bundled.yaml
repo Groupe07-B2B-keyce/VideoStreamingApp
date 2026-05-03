@@ -1,0 +1,4735 @@
+openapi: 3.0.3
+info:
+  title: Prime Video Clone API
+  version: 1.0.0
+  description: Spécification OpenAPI 3.0 pour le clone de Prime Video (Approche Domain-Driven
+    Design).
+servers:
+- url: http://localhost:8080/api/v1
+  description: Serveur de développement local
+security:
+- bearerAuth: []
+tags:
+- name: Partner
+  description: Espace partenaire — soumission et gestion des contenus (ROLE_PARTNER)
+- name: Admin
+  description: Back-office Super Admin — approbation, licences, statistiques globales
+    (ROLE_SUPER_ADMIN)
+- name: Catalog
+  description: Gestion du catalogue de titres (Films, Séries, Documentaires)
+- name: Genres
+  description: Gestion des genres
+- name: Collections
+  description: Gestion des collections et franchises
+- name: Persons
+  description: Gestion des personnes (Acteurs, Réalisateurs)
+- name: Authentication
+  description: Authentification, inscription et gestion des tokens JWT
+- name: Accounts
+  description: Gestion du compte utilisateur (infos de facturation, abonnement)
+- name: Profiles
+  description: Gestion des profils de visionnage (multi-profils avec contrôle parental)
+- name: Devices
+  description: Gestion des appareils enregistrés
+- name: Playback
+  description: Lancement de la lecture, token de streaming sécurisé (DRM)
+- name: WatchProgress
+  description: Suivi de la progression de lecture et historique
+- name: XRay
+  description: Métadonnées temporelles X-Ray (acteurs à l'écran, musique, anecdotes)
+- name: Watchlist
+  description: Gestion de la liste de visionnage (Watchlist) par profil
+- name: Reviews
+  description: Avis et notations des utilisateurs sur les titres
+- name: Recommendations
+  description: Recommandations personnalisées basées sur le profil
+- name: GroupWatch
+  description: Sessions de visionnage synchronisé en groupe
+paths:
+  /partner/titles:
+    get:
+      tags:
+      - Partner
+      summary: Lister ses titres soumis
+      operationId: listPartnerTitles
+      description: Retourne uniquement les titres appartenant au partenaire connecté.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/GetPartnerTitlesStatusParameter'
+      responses:
+        '200':
+          description: Titres récupérés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPartnerTitles200Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+      - Partner
+      summary: Soumettre un nouveau titre
+      operationId: submitTitle
+      description: 'Soumet un nouveau film ou série pour ingestion. Le contenu passe
+        par le cycle : PROCESSING → PENDING_REVIEW → APPROVED/REJECTED → PUBLISHED.
+
+        '
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitTitleRequest'
+            example:
+              originalTitle: Le Dernier Voyage
+              type: MOVIE
+              releaseYear: 2024
+              rating: PG13
+              synopsis: Un homme part à la recherche de ses origines...
+              videoFileUrl: s3://primevideo-ingestion/partners/indie/le-dernier-voyage.mp4
+              posterUrl: s3://primevideo-ingestion/partners/indie/poster.jpg
+              technicalDetails:
+                resolutionMax: FHD_1080P
+                hasHDR: false
+                durationMinutes: 98
+                supportedAudioLanguages:
+                - fr
+                supportedSubtitles:
+                - fr
+                - en
+      responses:
+        '201':
+          description: Titre soumis avec succès — en attente de traitement
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              description: URL du job d'ingestion créé
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          description: Fichier trop volumineux
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.com/errors/payload-too-large
+                title: Fichier trop volumineux
+                status: 413
+                detail: La taille maximale autorisée est de 50 Go.
+                instance: /api/v1/partner/titles
+                correlationId: e5f6a7b8-c9d0-1234-efab-345678901234
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /partner/titles/{jobId}:
+    parameters:
+    - name: jobId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Partner
+      summary: Suivre le statut d'une soumission
+      operationId: getIngestionJob
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Statut du job récupéré
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJob'
+              example:
+                id: job-001
+                titleId: title-abc
+                originalTitle: Le Dernier Voyage
+                status: PENDING_REVIEW
+                reviewNotes: null
+                createdAt: '2024-06-01T10:00:00Z'
+                updatedAt: '2024-06-01T10:45:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /partner/analytics/{titleId}:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    - name: from
+      in: query
+      description: Date de début de la période (YYYY-MM-DD)
+      schema:
+        $ref: '#/components/schemas/DateSchema'
+    - name: to
+      in: query
+      description: Date de fin de la période (YYYY-MM-DD)
+      schema:
+        $ref: '#/components/schemas/DateSchema'
+    get:
+      tags:
+      - Partner
+      summary: Statistiques de visionnage d'un titre
+      operationId: getPartnerTitleAnalytics
+      description: Un partenaire ne peut voir les analytics que de ses propres titres.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Statistiques récupérées avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TitleAnalytics'
+              example:
+                titleId: title-abc
+                titleName: Le Dernier Voyage
+                totalViews: 12500
+                uniqueViewers: 9800
+                averageWatchDurationMinutes: 72.5
+                completionRate: 0.68
+                totalRevenue: 4520.5
+                currency: EUR
+                period:
+                  from: '2024-01-01'
+                  to: '2024-06-30'
+                topCountries:
+                - countryCode: FR
+                  viewCount: 8000
+                - countryCode: BE
+                  viewCount: 1500
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/ingestion-queue:
+    get:
+      tags:
+      - Admin
+      summary: File d'attente de révision (tous partenaires)
+      operationId: getIngestionQueue
+      description: Liste tous les titres en PENDING_REVIEW. Accès ROLE_SUPER_ADMIN
+        uniquement.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: File d'attente récupérée
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAdminIngestionQueue200Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/ingestion-queue/{jobId}/status:
+    parameters:
+    - name: jobId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    patch:
+      tags:
+      - Admin
+      summary: Approuver ou rejeter une soumission
+      operationId: updateIngestionStatus
+      description: Permet à un Super Admin d'approuver (APPROVED) ou de rejeter (REJECTED)
+        une soumission avec des notes.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIngestionStatusRequest'
+            examples:
+              approve:
+                summary: Approuver le contenu
+                value:
+                  status: APPROVED
+                  reviewNotes: Contenu conforme aux standards.
+              reject:
+                summary: Rejeter le contenu
+                value:
+                  status: REJECTED
+                  rejectionCode: LOW_QUALITY
+                  reviewNotes: La résolution est insuffisante. Merci de soumettre
+                    en 1080p minimum.
+      responses:
+        '200':
+          description: Statut mis à jour avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/titles/{titleId}/licenses:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Admin
+      summary: Lister les licences d'un titre
+      operationId: listTitleLicenses
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Licences récupérées
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAdminTitlesTitleidLicenses200Response'
+              example:
+              - id: lic-001
+                titleId: title-abc
+                countryCode: FR
+                accessType: INCLUDED
+                startDate: '2024-01-01'
+                endDate: '2025-12-31'
+                isExclusive: false
+                createdAt: '2024-01-01T00:00:00Z'
+                updatedAt: '2024-01-01T00:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+      - Admin
+      summary: Créer une licence pour un pays
+      operationId: createLicense
+      description: Crée une règle de diffusion pour un pays spécifique. Supporte le
+        modèle SVOD + TVOD.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLicenseRequest'
+            example:
+              countryCode: US
+              accessType: RENT
+              rentalPrice: 3.99
+              purchasePrice: 12.99
+              currency: USD
+              startDate: '2024-06-01'
+              endDate: '2026-06-01'
+              isExclusive: false
+      responses:
+        '201':
+          description: Licence créée avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/License'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Une licence existe déjà pour ce pays
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/stats:
+    get:
+      tags:
+      - Admin
+      summary: Statistiques globales de la plateforme
+      operationId: getGlobalStats
+      description: Tableau de bord du Super Admin avec KPIs globaux.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Statistiques globales récupérées
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalPlatformStats'
+              example:
+                totalUsers: 2500000
+                activeSubscriptions: 1800000
+                totalTitles: 12500
+                totalPartners: 380
+                totalViewsThisMonth: 85000000
+                newRegistrationsThisMonth: 45000
+                revenueThisMonth: 3200000.0
+                currency: EUR
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles:
+    get:
+      tags:
+      - Catalog
+      summary: Lister le catalogue de titres
+      operationId: listTitles
+      description: Retourne la liste paginée de tous les titres publiés, avec des
+        filtres avancés par genre, type, année, etc.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: type
+        in: query
+        description: Filtrer par type de contenu
+        schema:
+          $ref: '#/components/schemas/GetTitlesTypeParameter'
+      - name: genreId
+        in: query
+        description: Filtrer par identifiant de genre
+        schema:
+          $ref: '#/components/schemas/UuidSchema'
+      - name: releaseYear
+        in: query
+        description: Filtrer par année de sortie
+        schema:
+          $ref: '#/components/schemas/IntegerSchema'
+      - name: rating
+        in: query
+        description: Filtrer par classification d'âge
+        schema:
+          $ref: '#/components/schemas/GetTitlesRatingParameter'
+      - name: accessType
+        in: query
+        description: Filtrer par type d'accès
+        schema:
+          $ref: '#/components/schemas/GetTitlesAccesstypeParameter'
+      - name: sort
+        in: query
+        description: Trier les résultats
+        schema:
+          $ref: '#/components/schemas/GetTitlesSortParameter'
+      - name: q
+        in: query
+        description: Recherche textuelle sur le titre
+        schema:
+          $ref: '#/components/schemas/StringSchema'
+      responses:
+        '200':
+          description: Catalogue récupéré avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Cache-Control:
+              description: Directive de mise en cache
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+            ETag:
+              description: Identifiant de version de la ressource
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTitles200Response'
+              example:
+                meta:
+                  totalItems: 450
+                  totalPages: 23
+                  currentPage: 1
+                  itemsPerPage: 20
+                data:
+                - id: 550e8400-e29b-41d4-a716-446655440001
+                  originalTitle: Oppenheimer
+                  type: MOVIE
+                  rating: R
+                  releaseYear: 2023
+                  posterUrl: https://cdn.primevideo.com/titles/oppenheimer/poster.jpg
+                  imdbRating: 8.3
+                  accessInfo:
+                    accessType: INCLUDED
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      description: Identifiant unique du titre
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Catalog
+      summary: Obtenir les détails complets d'un titre
+      operationId: getTitleById
+      description: Retourne tous les détails d'un titre, incluant son casting, ses
+        genres et ses informations d'accès.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Titre récupéré avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Cache-Control:
+              description: Cache pendant 5 minutes
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+            ETag:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Title'
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440001
+                originalTitle: Oppenheimer
+                type: MOVIE
+                status: PUBLISHED
+                synopsis: L'histoire de J. Robert Oppenheimer et du développement
+                  de la bombe atomique.
+                tagline: Le monde change pour toujours.
+                rating: R
+                releaseYear: 2023
+                posterUrl: https://cdn.primevideo.com/titles/oppenheimer/poster.jpg
+                backdropUrl: https://cdn.primevideo.com/titles/oppenheimer/backdrop.jpg
+                imdbId: tt15398776
+                imdbRating: 8.3
+                genres:
+                - id: genre-001
+                  name: Biopic
+                  slug: biopic
+                technicalDetails:
+                  resolutionMax: UHD_4K
+                  hasHDR: true
+                  hasDolbyAtmos: true
+                  durationMinutes: 180
+                  supportedAudioLanguages:
+                  - fr
+                  - en
+                  supportedSubtitles:
+                  - fr
+                  - en
+                  - ar
+                accessInfo:
+                  accessType: INCLUDED
+                createdAt: '2023-07-21T10:00:00Z'
+                updatedAt: '2023-07-21T10:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}/casting:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Catalog
+      summary: Obtenir le casting complet d'un titre
+      operationId: getTitleCasting
+      description: Retourne la liste des acteurs, réalisateurs et autres membres du
+        casting d'un titre.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Casting récupéré avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTitlesTitleidCasting200Response'
+              example:
+              - person:
+                  id: person-001
+                  fullName: Cillian Murphy
+                  photoUrl: https://cdn.primevideo.com/people/murphy.jpg
+                characterName: J. Robert Oppenheimer
+                role: ACTOR
+                order: 1
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}/seasons:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Catalog
+      summary: Lister les saisons d'une série
+      operationId: listSeasonsByTitle
+      description: Retourne toutes les saisons d'une série. Retourne 400 si le titre
+        est un film.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Saisons récupérées avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTitlesTitleidSeasons200Response'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}/seasons/{seasonNumber}/episodes:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    - name: seasonNumber
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/IntegerSchema'
+    get:
+      tags:
+      - Catalog
+      summary: Lister les épisodes d'une saison
+      operationId: listEpisodesBySeason
+      description: Retourne tous les épisodes d'une saison donnée d'une série.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Épisodes récupérés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTitlesTitleidSeasonsSeasonnumberEpisodes200Response'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /genres:
+    get:
+      tags:
+      - Genres
+      summary: Lister tous les genres
+      operationId: listGenres
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Genres récupérés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Cache-Control:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGenres200Response'
+              example:
+              - id: genre-001
+                name: Action
+                slug: action
+                createdAt: '2024-01-01T00:00:00Z'
+                updatedAt: '2024-01-01T00:00:00Z'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /collections:
+    get:
+      tags:
+      - Collections
+      summary: Lister toutes les collections
+      operationId: listCollections
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: type
+        in: query
+        schema:
+          $ref: '#/components/schemas/GetCollectionsTypeParameter'
+      responses:
+        '200':
+          description: Collections récupérées avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCollections200Response'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /collections/{collectionId}/titles:
+    parameters:
+    - name: collectionId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Collections
+      summary: Lister les titres d'une collection
+      operationId: listTitlesByCollection
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Titres de la collection récupérés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCollectionsCollectionidTitles200Response'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/register:
+    post:
+      tags:
+      - Authentication
+      summary: Créer un nouveau compte
+      operationId: registerAccount
+      description: Inscription d'un nouvel utilisateur. Un profil par défaut est créé
+        automatiquement.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: nouveau@example.com
+              password: SecurePass123!
+              country: FR
+      responses:
+        '201':
+          description: Compte créé avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              description: URL du compte créé
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Un compte avec cet email existe déjà
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.com/errors/email-already-exists
+                title: Email déjà utilisé
+                status: 409
+                detail: Un compte avec l'adresse jean@example.com existe déjà.
+                instance: /api/v1/auth/register
+                correlationId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/login:
+    post:
+      tags:
+      - Authentication
+      summary: Connexion et obtention des tokens JWT
+      operationId: login
+      description: Authentifie un utilisateur et retourne un access token (1h) et
+        un refresh token (30j).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: jean.dupont@example.com
+              password: SecurePass123!
+              deviceName: iPhone de Jean
+      responses:
+        '200':
+          description: Authentification réussie
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              example:
+                accessToken: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIn0...
+                refreshToken: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWZyZXNoIn0...
+                tokenType: Bearer
+                expiresIn: 3600
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.com/errors/invalid-credentials
+                title: Identifiants invalides
+                status: 401
+                detail: L'email ou le mot de passe est incorrect.
+                instance: /api/v1/auth/login
+                correlationId: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/refresh:
+    post:
+      tags:
+      - Authentication
+      summary: Renouveler l'access token
+      operationId: refreshToken
+      description: Échange un refresh token valide contre un nouvel access token.
+        Implémente la rotation des refresh tokens.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Tokens renouvelés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Refresh token invalide ou expiré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/logout:
+    post:
+      tags:
+      - Authentication
+      summary: Déconnexion et invalidation du token
+      operationId: logout
+      description: Invalide le refresh token courant (blacklist). L'access token expirera
+        naturellement.
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Déconnexion réussie (aucun contenu)
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /accounts/me:
+    get:
+      tags:
+      - Accounts
+      summary: Obtenir les informations du compte connecté
+      operationId: getMyAccount
+      description: Retourne les informations du compte de l'utilisateur authentifié.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Compte récupéré avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountSummary'
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440000
+                email: jean.dupont@example.com
+                subscriptionStatus: ACTIVE
+                subscriptionPlan: PREMIUM
+                subscriptionExpiresAt: '2025-12-31T23:59:59Z'
+                country: FR
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /accounts/me/profiles:
+    get:
+      tags:
+      - Profiles
+      summary: Lister les profils du compte
+      operationId: listProfiles
+      description: Retourne tous les profils associés au compte connecté (max 5 profils
+        par compte).
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Profils récupérés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAccountsMeProfiles200Response'
+              example:
+              - id: profile-001
+                displayName: Jean
+                avatarUrl: https://cdn.primevideo.com/avatars/avatar_01.png
+                isKidsProfile: false
+                maturityLevel: ADULT
+              - id: profile-002
+                displayName: Emma (Enfants)
+                avatarUrl: https://cdn.primevideo.com/avatars/kids_02.png
+                isKidsProfile: true
+                maturityLevel: KIDS
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+      - Profiles
+      summary: Créer un nouveau profil
+      operationId: createProfile
+      description: Crée un nouveau profil. Un compte peut avoir au maximum 5 profils.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProfileRequest'
+            example:
+              displayName: Emma
+              isKidsProfile: true
+              maturityLevel: KIDS
+              language: fr
+      responses:
+        '201':
+          description: Profil créé avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              description: URL du profil créé
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Nombre maximal de profils atteint (5)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.com/errors/max-profiles-reached
+                title: Limite de profils atteinte
+                status: 409
+                detail: Un compte ne peut pas avoir plus de 5 profils.
+                instance: /api/v1/accounts/me/profiles
+                correlationId: c3d4e5f6-a7b8-9012-cdef-123456789012
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /accounts/me/profiles/{profileId}:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      description: Identifiant unique du profil
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Profiles
+      summary: Obtenir les détails d'un profil
+      operationId: getProfileById
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Profil récupéré avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+      - Profiles
+      summary: Mettre à jour un profil (modification partielle)
+      operationId: updateProfile
+      description: Met à jour partiellement les informations d'un profil. Seuls les
+        champs fournis sont modifiés.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            example:
+              displayName: Emma 👧
+              autoplayNextEpisode: false
+              defaultAudioLanguage: fr
+      responses:
+        '200':
+          description: Profil mis à jour avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+      - Profiles
+      summary: Supprimer un profil
+      operationId: deleteProfile
+      description: Supprime un profil. Le profil principal (premier créé) ne peut
+        pas être supprimé.
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Profil supprimé avec succès (aucun contenu)
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Impossible de supprimer le profil principal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.com/errors/cannot-delete-primary-profile
+                title: Suppression impossible
+                status: 403
+                detail: Le profil principal d'un compte ne peut pas être supprimé.
+                instance: /api/v1/accounts/me/profiles/profile-001
+                correlationId: d4e5f6a7-b8c9-0123-defa-234567890123
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /accounts/me/profiles/{profileId}/parental-pin:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    put:
+      tags:
+      - Profiles
+      summary: Définir ou modifier le code PIN parental
+      operationId: setParentalPin
+      description: Active et définit un code PIN à 4 chiffres pour protéger l'accès
+        à ce profil et contrôler le visionnage de contenu sensible.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetParentalPinRequest'
+            example:
+              pin: '1234'
+      responses:
+        '200':
+          description: PIN parental défini avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /accounts/me/devices:
+    get:
+      tags:
+      - Devices
+      summary: Lister les appareils enregistrés
+      operationId: listDevices
+      description: Retourne tous les appareils enregistrés sur le compte. Utile pour
+        gérer les connexions actives.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Appareils récupérés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAccountsMeDevices200Response'
+              example:
+              - id: device-001
+                name: TV du salon
+                type: SMART_TV
+                status: ACTIVE
+                lastUsedAt: '2024-06-01T20:00:00Z'
+                ipAddress: 192.168.*.*
+                createdAt: '2024-01-01T00:00:00Z'
+                updatedAt: '2024-06-01T20:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /accounts/me/devices/{deviceId}:
+    parameters:
+    - name: deviceId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    delete:
+      tags:
+      - Devices
+      summary: Révoquer un appareil (déconnexion forcée)
+      operationId: revokeDevice
+      description: Révoque un appareil enregistré, forçant la déconnexion sur cet
+        appareil. Tous les tokens associés à cet appareil sont invalidés.
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Appareil révoqué avec succès (aucun contenu)
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}/playback:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    post:
+      tags:
+      - Playback
+      summary: Lancer la lecture d'un titre
+      operationId: startPlayback
+      description: 'Génère un token de streaming sécurisé (JWT signé, durée 4h) avec
+        l''URL HLS/DASH et les infos DRM adaptées à l''appareil. Vérifie les droits
+        de diffusion dans le pays du compte avant de délivrer le token.
+
+        '
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartPlaybackRequest'
+            example:
+              profileId: profile-001
+              deviceType: SMART_TV
+              preferredQuality: UHD_4K
+              resumeFromProgress: true
+      responses:
+        '200':
+          description: Token de lecture délivré avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybackToken'
+              example:
+                streamUrl: https://stream.primevideo.com/hls/oppenheimer/master.m3u8
+                token: eyJhbGciOiJSUzI1NiJ9.eyJ0aXRsZUlkIjoib3BwZW5oZWltZXIifQ...
+                expiresAt: '2024-06-01T22:00:00Z'
+                format: HLS
+                drmType: WIDEVINE
+                availableQualities:
+                - UHD_4K
+                - FHD_1080P
+                - HD_720P
+                - SD
+                subtitleTracks:
+                - language: fr
+                  label: Français
+                  url: https://stream.primevideo.com/subs/oppenheimer/fr.vtt
+                - language: en
+                  label: English
+                  url: https://stream.primevideo.com/subs/oppenheimer/en.vtt
+                audioTracks:
+                - language: fr
+                  label: Français
+                  codec: EAC3
+                - language: en
+                  label: English
+                  codec: EAC3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès refusé — titre non disponible dans votre pays ou abonnement
+            insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.com/errors/geo-restricted
+                title: Contenu non disponible dans votre région
+                status: 403
+                detail: Ce titre n'est pas disponible en France avec votre abonnement
+                  actuel.
+                instance: /api/v1/titles/oppenheimer-id/playback
+                correlationId: f6a7b8c9-d0e1-2345-fabc-456789012345
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /profiles/{profileId}/watch-progress:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - WatchProgress
+      summary: Historique de visionnage d'un profil
+      operationId: getWatchHistory
+      description: Retourne l'historique de visionnage paginé du profil, trié par
+        date décroissante.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: status
+        in: query
+        description: Filtrer par statut
+        schema:
+          $ref: '#/components/schemas/GetProfilesProfileidWatchProgressStatusParameter'
+      responses:
+        '200':
+          description: Historique récupéré avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProfilesProfileidWatchProgress200Response'
+              example:
+                meta:
+                  totalItems: 25
+                  totalPages: 2
+                  currentPage: 1
+                  itemsPerPage: 20
+                data:
+                - title:
+                    id: title-001
+                    originalTitle: Oppenheimer
+                    type: MOVIE
+                    posterUrl: https://cdn.primevideo.com/titles/oppenheimer/poster.jpg
+                  session:
+                    progressSeconds: 4320
+                    durationSeconds: 10800
+                    completionPercent: 40.0
+                    status: IN_PROGRESS
+                    lastWatchedAt: '2024-06-01T21:30:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /profiles/{profileId}/watch-progress/{titleId}:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - WatchProgress
+      summary: Progression sur un titre spécifique
+      operationId: getProgressForTitle
+      description: Retourne la position exacte de lecture pour permettre le 'Reprendre
+        la lecture'.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Progression récupérée
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+      - WatchProgress
+      summary: Mettre à jour la progression (heartbeat)
+      operationId: updateWatchProgress
+      description: 'Enregistre la position de lecture courante. Appelé périodiquement
+        par le player (toutes les 30s) et lors de la pause/fermeture. Crée la session
+        si elle n''existe pas encore.
+
+        '
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWatchProgressRequest'
+            example:
+              progressSeconds: 5100
+              durationSeconds: 10800
+              deviceType: SMART_TV
+              qualitySelected: UHD_4K
+      responses:
+        '200':
+          description: Progression mise à jour
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+      - WatchProgress
+      summary: Supprimer un titre de l'historique
+      operationId: deleteWatchProgress
+      description: Supprime l'entrée de l'historique de visionnage pour ce titre et
+        ce profil.
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Entrée supprimée de l'historique
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}/xray:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    - name: timestampSeconds
+      in: query
+      required: true
+      description: Position actuelle dans la vidéo (en secondes) pour récupérer les
+        events actifs
+      schema:
+        $ref: '#/components/schemas/TitlesTitleidXrayTimestampsecondsParameter'
+    - name: episodeId
+      in: query
+      description: Identifiant de l'épisode (séries uniquement)
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - XRay
+      summary: Obtenir les métadonnées X-Ray à un timestamp
+      operationId: getXRayAtTimestamp
+      description: 'Retourne tous les TimelineEvents actifs à la seconde indiquée
+        : acteurs visibles à l''écran, musique jouée, anecdotes de tournage. Permet
+        d''afficher le panneau X-Ray en temps réel pendant le visionnage.
+
+        '
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Événements X-Ray récupérés
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Cache-Control:
+              description: Les données X-Ray sont stables, mise en cache longue durée
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTitlesTitleidXray200Response'
+              example:
+              - id: event-001
+                titleId: title-oppenheimer
+                eventType: CAST_ON_SCREEN
+                startTimeSeconds: 255
+                endTimeSeconds: 330
+                person:
+                  id: person-001
+                  fullName: Cillian Murphy
+                  photoUrl: https://cdn.primevideo.com/people/murphy.jpg
+                characterName: J. Robert Oppenheimer
+                createdAt: '2024-01-01T00:00:00Z'
+                updatedAt: '2024-01-01T00:00:00Z'
+              - id: event-002
+                titleId: title-oppenheimer
+                eventType: MUSIC_PLAYING
+                startTimeSeconds: 260
+                endTimeSeconds: 310
+                musicTitle: Can You Hear the Music
+                musicArtist: Ludwig Göransson
+                createdAt: '2024-01-01T00:00:00Z'
+                updatedAt: '2024-01-01T00:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/titles/{titleId}/xray:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    post:
+      tags:
+      - XRay
+      summary: Ajouter un événement X-Ray (Admin)
+      operationId: createTimelineEvent
+      description: Permet aux éditeurs ou à l'équipe de créer des métadonnées X-Ray
+        sur un titre publié.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAdminTitlesTitleidXrayRequest'
+            example:
+              eventType: CAST_ON_SCREEN
+              startTimeSeconds: 255
+              endTimeSeconds: 330
+              personId: person-001
+              characterName: J. Robert Oppenheimer
+      responses:
+        '201':
+          description: Événement X-Ray créé avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Location:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /profiles/{profileId}/watchlist:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      description: Identifiant du profil
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Watchlist
+      summary: Lister la Watchlist d'un profil
+      operationId: getWatchlist
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Watchlist récupérée avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Cache-Control:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistPage'
+              example:
+                data:
+                - id: wl-5f3e9a1b
+                  titleId: ttl-8a2b4c6d
+                  addedAt: '2026-03-15T20:30:00Z'
+                  title:
+                    id: ttl-8a2b4c6d
+                    name: 'Dune: Part Two'
+                    type: MOVIE
+                    posterUrl: https://cdn.primevideo.example.com/posters/dune2.webp
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 37
+                  totalPages: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+      - Watchlist
+      summary: Ajouter un titre à la Watchlist
+      operationId: addToWatchlist
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToWatchlistRequest'
+            example:
+              titleId: ttl-8a2b4c6d
+      responses:
+        '201':
+          description: Titre ajouté à la Watchlist avec succès
+          headers:
+            Location:
+              description: URL de l'entrée Watchlist créée
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Titre introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.example.com/errors/not-found
+                title: Titre introuvable
+                status: 404
+                detail: Le titre ttl-8a2b4c6d est introuvable ou n'est pas disponible.
+                instance: /api/v1/profiles/prf-1a2b3c4d/watchlist
+        '409':
+          description: Le titre est déjà dans la Watchlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.example.com/errors/conflict
+                title: Conflit de ressource
+                status: 409
+                detail: Ce titre est déjà présent dans votre Watchlist.
+                instance: /api/v1/profiles/prf-1a2b3c4d/watchlist
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /profiles/{profileId}/watchlist/{watchlistItemId}:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    - name: watchlistItemId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/StringSchema'
+    delete:
+      tags:
+      - Watchlist
+      summary: Supprimer un titre de la Watchlist
+      operationId: removeFromWatchlist
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Titre retiré de la Watchlist avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}/reviews:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    - name: sort
+      in: query
+      required: false
+      description: Critère de tri des avis
+      schema:
+        $ref: '#/components/schemas/TitlesTitleidReviewsSortParameter'
+    get:
+      tags:
+      - Reviews
+      summary: Lister les avis d'un titre
+      operationId: listReviews
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Avis récupérés avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Cache-Control:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewPage'
+              example:
+                summary:
+                  titleId: ttl-8a2b4c6d
+                  averageRating: 4.2
+                  totalReviews: 1847
+                  ratingDistribution:
+                    '1': 52
+                    '2': 89
+                    '3': 201
+                    '4': 613
+                    '5': 892
+                data:
+                - id: rev-9d1e2f3a
+                  rating: 5
+                  comment: Un chef-d'œuvre absolu.
+                  isVerifiedPurchase: true
+                  helpfulVotes: 312
+                  createdAt: '2026-03-10T14:22:00Z'
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 1847
+                  totalPages: 93
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+      - Reviews
+      summary: Publier un avis sur un titre
+      operationId: createReview
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+            example:
+              rating: 5
+              comment: Un chef-d'œuvre de la science-fiction moderne.
+      responses:
+        '201':
+          description: Avis publié avec succès
+          headers:
+            Location:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: L'utilisateur a déjà publié un avis pour ce titre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.example.com/errors/conflict
+                title: Avis déjà existant
+                status: 409
+                detail: Vous avez déjà soumis un avis pour ce titre. Utilisez PATCH
+                  pour le modifier.
+                instance: /api/v1/titles/ttl-8a2b4c6d/reviews
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /titles/{titleId}/reviews/{reviewId}:
+    parameters:
+    - name: titleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    - name: reviewId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    patch:
+      tags:
+      - Reviews
+      summary: Modifier son propre avis
+      operationId: updateReview
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '200':
+          description: Avis mis à jour avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+      - Reviews
+      summary: Supprimer son propre avis
+      operationId: deleteReview
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Avis supprimé avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /profiles/{profileId}/recommendations:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - Recommendations
+      summary: Obtenir les recommandations personnalisées d'un profil
+      operationId: getRecommendations
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/LimitParam'
+      - name: reason
+        in: query
+        required: false
+        description: Filtrer par type de recommandation
+        schema:
+          $ref: '#/components/schemas/GetProfilesProfileidRecommendationsReasonParameter'
+      responses:
+        '200':
+          description: Recommandations personnalisées récupérées
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+            Cache-Control:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationPage'
+              example:
+                data:
+                - titleId: ttl-2a3b4c5d
+                  score: 0.97
+                  reason: BECAUSE_YOU_WATCHED
+                  reasonContext: Interstellar
+                  title:
+                    id: ttl-2a3b4c5d
+                    name: Arrival
+                    type: MOVIE
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 50
+                  totalPages: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /groupwatch:
+    post:
+      tags:
+      - GroupWatch
+      summary: Créer une session GroupWatch
+      operationId: createGroupWatchSession
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupWatchRequest'
+            example:
+              titleId: ttl-8a2b4c6d
+              maxParticipants: 10
+      responses:
+        '201':
+          description: Session GroupWatch créée avec succès
+          headers:
+            Location:
+              schema:
+                $ref: '#/components/schemas/StringSchema'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupWatchSession'
+              example:
+                id: gw-4a5b6c7d-8e9f
+                titleId: ttl-8a2b4c6d
+                hostProfileId: prf-1a2b3c4d
+                status: WAITING
+                inviteCode: PRIMEGW7
+                currentPositionSeconds: 0
+                maxParticipants: 10
+                participants: []
+                createdAt: '2026-05-03T10:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /groupwatch/{sessionId}:
+    parameters:
+    - name: sessionId
+      in: path
+      required: true
+      description: Identifiant de la session GroupWatch
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    get:
+      tags:
+      - GroupWatch
+      summary: Obtenir l'état d'une session GroupWatch
+      operationId: getGroupWatchSession
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: État de la session récupéré
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupWatchSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /groupwatch/{sessionId}/join:
+    parameters:
+    - name: sessionId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    post:
+      tags:
+      - GroupWatch
+      summary: Rejoindre une session GroupWatch via code d'invitation
+      operationId: joinGroupWatchSession
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostGroupwatchSessionidJoinRequest'
+      responses:
+        '200':
+          description: Session rejointe avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupWatchSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Session pleine ou code invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.example.com/errors/forbidden
+                title: Accès refusé
+                status: 403
+                detail: La session est complète ou le code d'invitation est invalide.
+                instance: /api/v1/groupwatch/gw-4a5b6c7d/join
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /groupwatch/{sessionId}/control:
+    parameters:
+    - name: sessionId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    post:
+      tags:
+      - GroupWatch
+      summary: Contrôler la lecture (PLAY/PAUSE/SEEK) — Hôte uniquement
+      operationId: controlGroupWatch
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupWatchControlRequest'
+            examples:
+              pause:
+                summary: Mettre en pause
+                value:
+                  action: PAUSE
+              seek:
+                summary: Aller à une position
+                value:
+                  action: SEEK
+                  positionSeconds: 2340
+      responses:
+        '200':
+          description: Commande de lecture appliquée et synchronisée
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupWatchSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Seul l'hôte peut contrôler la lecture
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://api.primevideo.example.com/errors/forbidden
+                title: Action réservée à l'hôte
+                status: 403
+                detail: Seul le profil hôte peut envoyer des commandes de contrôle.
+                instance: /api/v1/groupwatch/gw-4a5b6c7d/control
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /groupwatch/{sessionId}/leave:
+    parameters:
+    - name: sessionId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UuidSchema'
+    post:
+      tags:
+      - GroupWatch
+      summary: Quitter une session GroupWatch
+      operationId: leaveGroupWatchSession
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Session quittée avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT pour l'authentification. Fournir le token dans le header
+        Authorization.
+  responses:
+    BadRequest:
+      description: Requête invalide (paramètres manquants ou mal formés)
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+    Unauthorized:
+      description: Authentification requise ou token invalide
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: Accès refusé (permissions insuffisantes)
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Ressource non trouvée
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    RateLimitError:
+      description: Limite de requêtes dépassée (Rate Limit)
+      headers:
+        Retry-After:
+          description: Nombre de secondes avant de pouvoir réessayer
+          schema:
+            $ref: '#/components/schemas/IntegerSchema1'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    InternalServerError:
+      description: Erreur serveur interne
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Numéro de la page pour la pagination
+      required: false
+      schema:
+        $ref: '#/components/schemas/#ComponentsParametersPageparam'
+    LimitParam:
+      name: limit
+      in: query
+      description: Nombre maximal d'éléments par page
+      required: false
+      schema:
+        $ref: '#/components/schemas/#ComponentsParametersLimitparam'
+  headers:
+    RateLimitLimit:
+      description: Nombre de requêtes autorisées par fenêtre de temps
+      schema:
+        $ref: '#/components/schemas/IntegerSchema1'
+    RateLimitRemaining:
+      description: Nombre de requêtes restantes dans la fenêtre courante
+      schema:
+        $ref: '#/components/schemas/IntegerSchema1'
+    RateLimitReset:
+      description: Timestamp (Unix) indiquant quand le quota sera réinitialisé
+      schema:
+        $ref: '#/components/schemas/IntegerSchema1'
+  schemas:
+    ProblemDetails:
+      type: object
+      description: Format d'erreur standardisé selon RFC 7807
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI identifiant le type d'erreur
+        title:
+          type: string
+          description: Résumé court et lisible du problème
+        status:
+          type: integer
+          format: int32
+          description: Code de statut HTTP
+        detail:
+          type: string
+          description: Explication détaillée spécifique à cette occurrence
+        instance:
+          type: string
+          format: uri
+          description: URI identifiant l'occurrence spécifique du problème
+        correlationId:
+          type: string
+          format: uuid
+          description: ID de corrélation pour le traçage
+    ValidationError:
+      allOf:
+      - $ref: '#/components/schemas/ProblemDetails'
+      - type: object
+        properties:
+          errors:
+            type: array
+            description: Liste détaillée des erreurs de validation
+            items:
+              type: object
+              properties:
+                field:
+                  type: string
+                code:
+                  type: string
+                message:
+                  type: string
+    PartnerAccount:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - companyName
+        - email
+        - status
+        - partnerType
+        properties:
+          companyName:
+            type: string
+            description: Nom de la société ou du studio
+            example: Indie Films Studio SAS
+          email:
+            type: string
+            format: email
+            example: contact@indiefilms.com
+          status:
+            type: string
+            enum:
+            - PENDING_VERIFICATION
+            - ACTIVE
+            - SUSPENDED
+            - BANNED
+            description: Statut du compte partenaire
+          partnerType:
+            type: string
+            enum:
+            - INDEPENDENT
+            - STUDIO_MAJOR
+            - DISTRIBUTOR
+            - CHANNEL
+            description: Type de partenaire
+          country:
+            type: string
+            description: Pays d'enregistrement de la société
+            example: FR
+          websiteUrl:
+            type: string
+            format: uri
+            example: https://www.indiefilms.com
+          totalTitles:
+            type: integer
+            description: Nombre total de titres soumis par ce partenaire
+            example: 42
+    MediaIngestionStatus:
+      type: string
+      enum:
+      - UPLOADING
+      - PROCESSING
+      - PENDING_REVIEW
+      - APPROVED
+      - REJECTED
+      - PUBLISHED
+      - ARCHIVED
+      description: 'Cycle de vie d''un contenu soumis : UPLOADING → PROCESSING → PENDING_REVIEW
+        → APPROVED/REJECTED → PUBLISHED
+
+        '
+    SubmitTitleRequest:
+      type: object
+      required:
+      - originalTitle
+      - type
+      - releaseYear
+      - rating
+      - synopsis
+      - videoFileUrl
+      - posterUrl
+      properties:
+        originalTitle:
+          type: string
+          maxLength: 255
+          example: Le Dernier Voyage
+        type:
+          type: string
+          enum:
+          - MOVIE
+          - SERIES
+          - DOCUMENTARY
+          - MINI_SERIES
+          - STAND_UP
+        releaseYear:
+          type: integer
+          minimum: 1888
+          maximum: 2030
+          example: 2024
+        rating:
+          type: string
+          enum:
+          - G
+          - PG
+          - PG13
+          - R
+          - NC17
+          - TV_MA
+          - TV_14
+          - TV_PG
+          - TV_G
+        synopsis:
+          type: string
+          maxLength: 2000
+          example: Un homme part à la recherche de ses origines...
+        tagline:
+          type: string
+          maxLength: 255
+        genreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Liste des identifiants de genres
+        videoFileUrl:
+          type: string
+          format: uri
+          description: URL du fichier vidéo source (stockage sécurisé S3/Aspera)
+          example: s3://primevideo-ingestion/partners/indie/le-dernier-voyage.mp4
+        posterUrl:
+          type: string
+          format: uri
+          example: s3://primevideo-ingestion/partners/indie/poster.jpg
+        backdropUrl:
+          type: string
+          format: uri
+        trailerUrl:
+          type: string
+          format: uri
+        imdbId:
+          type: string
+          example: tt1234567
+        castingData:
+          type: array
+          description: Données de casting à associer au titre
+          items:
+            type: object
+            required:
+            - fullName
+            - role
+            properties:
+              fullName:
+                type: string
+                example: Marie Curie
+              role:
+                type: string
+                enum:
+                - ACTOR
+                - DIRECTOR
+                - PRODUCER
+                - COMPOSER
+                - SCREENWRITER
+              characterName:
+                type: string
+        technicalDetails:
+          $ref: '#/components/schemas/TechnicalDetails'
+    IngestionJob:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - status
+        - titleId
+        properties:
+          titleId:
+            type: string
+            format: uuid
+            description: Identifiant du titre associé
+          originalTitle:
+            type: string
+          status:
+            $ref: '#/components/schemas/MediaIngestionStatus'
+          reviewNotes:
+            type: string
+            description: Commentaires de l'équipe de contrôle qualité
+            example: La résolution vidéo est insuffisante. Merci de soumettre en 1080p
+              minimum.
+          processedAt:
+            type: string
+            format: date-time
+            description: Date de traitement par le système QC automatique
+          reviewedAt:
+            type: string
+            format: date-time
+            description: Date de révision humaine
+          rejectionCode:
+            type: string
+            enum:
+            - LOW_QUALITY
+            - COPYRIGHT_ISSUE
+            - CONTENT_VIOLATION
+            - METADATA_INCOMPLETE
+            - TECHNICAL_ERROR
+            description: Code de rejet (si applicable)
+    UpdateIngestionStatusRequest:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - APPROVED
+          - REJECTED
+        reviewNotes:
+          type: string
+          description: Commentaires obligatoires en cas de rejet
+        rejectionCode:
+          type: string
+          enum:
+          - LOW_QUALITY
+          - COPYRIGHT_ISSUE
+          - CONTENT_VIOLATION
+          - METADATA_INCOMPLETE
+          - TECHNICAL_ERROR
+    License:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - titleId
+        - countryCode
+        - accessType
+        - startDate
+        properties:
+          titleId:
+            type: string
+            format: uuid
+            description: Titre concerné par la licence
+          countryCode:
+            type: string
+            description: Code pays ISO 3166-1 alpha-2 ('*' = mondial)
+            example: FR
+          accessType:
+            type: string
+            enum:
+            - INCLUDED
+            - RENT
+            - BUY
+            - CHANNEL_SUBSCRIPTION
+            description: Mode d'accès accordé dans ce pays
+          rentalPrice:
+            type: number
+            format: double
+            example: 3.99
+          purchasePrice:
+            type: number
+            format: double
+            example: 9.99
+          currency:
+            type: string
+            example: EUR
+          startDate:
+            type: string
+            format: date
+            description: Date de début de validité de la licence
+            example: '2024-01-01'
+          endDate:
+            type: string
+            format: date
+            description: Date de fin de validité (null = illimitée)
+            example: '2025-12-31'
+          isExclusive:
+            type: boolean
+            description: Droits exclusifs dans ce pays
+            default: false
+    CreateLicenseRequest:
+      type: object
+      required:
+      - countryCode
+      - accessType
+      - startDate
+      properties:
+        countryCode:
+          type: string
+          example: FR
+        accessType:
+          type: string
+          enum:
+          - INCLUDED
+          - RENT
+          - BUY
+          - CHANNEL_SUBSCRIPTION
+        rentalPrice:
+          type: number
+          format: double
+        purchasePrice:
+          type: number
+          format: double
+        currency:
+          type: string
+          default: EUR
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        isExclusive:
+          type: boolean
+          default: false
+    TitleAnalytics:
+      type: object
+      description: Statistiques de visionnage pour un titre
+      properties:
+        titleId:
+          type: string
+          format: uuid
+        titleName:
+          type: string
+        totalViews:
+          type: integer
+          description: Nombre total de visionnages
+          example: 125000
+        uniqueViewers:
+          type: integer
+          description: Nombre de spectateurs uniques
+          example: 98000
+        averageWatchDurationMinutes:
+          type: number
+          format: double
+          description: Durée moyenne de visionnage en minutes
+          example: 72.5
+        completionRate:
+          type: number
+          format: double
+          description: Taux de complétion (0.0 à 1.0)
+          example: 0.68
+        totalRevenue:
+          type: number
+          format: double
+          description: Revenus totaux générés (locations + achats)
+          example: 4520.5
+        currency:
+          type: string
+          example: EUR
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date
+            to:
+              type: string
+              format: date
+        topCountries:
+          type: array
+          description: Top 5 des pays par nombre de vues
+          items:
+            type: object
+            properties:
+              countryCode:
+                type: string
+                example: FR
+              viewCount:
+                type: integer
+                example: 45000
+    GlobalPlatformStats:
+      type: object
+      description: Statistiques globales de la plateforme (Super Admin uniquement)
+      properties:
+        totalUsers:
+          type: integer
+          example: 2500000
+        activeSubscriptions:
+          type: integer
+          example: 1800000
+        totalTitles:
+          type: integer
+          example: 12500
+        totalPartners:
+          type: integer
+          example: 380
+        totalViewsThisMonth:
+          type: integer
+          example: 85000000
+        newRegistrationsThisMonth:
+          type: integer
+          example: 45000
+        revenueThisMonth:
+          type: number
+          format: double
+          example: 3200000.0
+        currency:
+          type: string
+          example: EUR
+    BaseEntity:
+      type: object
+      description: Propriétés communes à toutes les entités
+      required:
+      - id
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de la ressource
+          example: 550e8400-e29b-41d4-a716-446655440000
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création (ISO 8601)
+          example: '2024-01-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière mise à jour (ISO 8601)
+          example: '2024-06-01T14:00:00Z'
+    PaginatedResponse:
+      type: object
+      description: Enveloppe pour les réponses paginées
+      required:
+      - data
+      - meta
+      properties:
+        meta:
+          type: object
+          required:
+          - totalItems
+          - totalPages
+          - currentPage
+          - itemsPerPage
+          properties:
+            totalItems:
+              type: integer
+              example: 250
+            totalPages:
+              type: integer
+              example: 13
+            currentPage:
+              type: integer
+              example: 1
+            itemsPerPage:
+              type: integer
+              example: 20
+    Pagination:
+      type: object
+      description: Métadonnées de pagination réutilisables
+      required:
+      - page
+      - limit
+      - totalItems
+      - totalPages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Page courante
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Nombre d'éléments par page
+          example: 20
+        totalItems:
+          type: integer
+          description: Nombre total d'éléments
+          example: 250
+        totalPages:
+          type: integer
+          description: Nombre total de pages
+          example: 13
+    Genre:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - name
+        - slug
+        properties:
+          name:
+            type: string
+            description: Nom du genre
+            example: Action
+          slug:
+            type: string
+            description: Identifiant URL du genre
+            example: action
+          description:
+            type: string
+            example: Films d'action et d'aventure à grande vitesse
+    Collection:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - name
+        - type
+        properties:
+          name:
+            type: string
+            example: Marvel Cinematic Universe
+          slug:
+            type: string
+            example: marvel-cinematic-universe
+          type:
+            type: string
+            enum:
+            - FRANCHISE
+            - UNIVERSE
+            - THEMATIC
+            - EDITORIAL
+            description: Type de collection
+          description:
+            type: string
+          posterUrl:
+            type: string
+            format: uri
+            example: https://cdn.primevideo.com/collections/mcu/poster.jpg
+    Person:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - fullName
+        properties:
+          fullName:
+            type: string
+            example: Christopher Nolan
+          photoUrl:
+            type: string
+            format: uri
+            example: https://cdn.primevideo.com/people/nolan.jpg
+          biography:
+            type: string
+          birthDate:
+            type: string
+            format: date
+            example: '1970-07-30'
+    CastingMember:
+      type: object
+      description: Lien entre un Title et une Person (rôle joué)
+      properties:
+        person:
+          $ref: '#/components/schemas/Person'
+        characterName:
+          type: string
+          description: Nom du personnage joué
+          example: Bruce Wayne
+        role:
+          type: string
+          enum:
+          - ACTOR
+          - DIRECTOR
+          - PRODUCER
+          - COMPOSER
+          - SCREENWRITER
+          description: Rôle de la personne dans le titre
+        order:
+          type: integer
+          description: Ordre d'affichage au générique
+          example: 1
+    TechnicalDetails:
+      type: object
+      description: Caractéristiques techniques du fichier vidéo
+      properties:
+        resolutionMax:
+          type: string
+          enum:
+          - SD
+          - HD_720P
+          - FHD_1080P
+          - UHD_4K
+          - UHD_8K
+          description: Résolution maximale disponible
+        hasHDR:
+          type: boolean
+          description: Disponible en HDR
+        hasDolbyVision:
+          type: boolean
+          description: Disponible en Dolby Vision
+        hasDolbyAtmos:
+          type: boolean
+          description: Disponible en Dolby Atmos
+        durationMinutes:
+          type: integer
+          description: Durée du contenu en minutes
+          example: 148
+        supportedAudioLanguages:
+          type: array
+          items:
+            type: string
+            description: Code langue ISO 639-1
+          example:
+          - fr
+          - en
+          - es
+        supportedSubtitles:
+          type: array
+          items:
+            type: string
+          example:
+          - fr
+          - en
+          - ar
+          - sw
+    AccessInfo:
+      type: object
+      description: Conditions d'accès au titre (modèle hybride SVOD/TVOD)
+      required:
+      - accessType
+      properties:
+        accessType:
+          type: string
+          enum:
+          - INCLUDED
+          - RENT
+          - BUY
+          - CHANNEL_SUBSCRIPTION
+          description: Modèle d'accès (Inclus Prime, Location, Achat ou Canal)
+        rentalPrice:
+          type: number
+          format: double
+          description: Prix de location (si applicable)
+          example: 3.99
+        purchasePrice:
+          type: number
+          format: double
+          description: Prix d'achat (si applicable)
+          example: 9.99
+        currency:
+          type: string
+          example: EUR
+        rentalDurationHours:
+          type: integer
+          description: Durée d'accès après location en heures
+          example: 48
+    Title:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - originalTitle
+        - type
+        - status
+        - rating
+        - releaseYear
+        - technicalDetails
+        - accessInfo
+        properties:
+          originalTitle:
+            type: string
+            description: Titre original de l'œuvre
+            example: Oppenheimer
+          localizedTitle:
+            type: string
+            description: Titre traduit/localisé
+            example: Oppenheimer
+          type:
+            type: string
+            enum:
+            - MOVIE
+            - SERIES
+            - DOCUMENTARY
+            - MINI_SERIES
+            - STAND_UP
+            description: Type de contenu
+          status:
+            type: string
+            enum:
+            - DRAFT
+            - PENDING_REVIEW
+            - PUBLISHED
+            - ARCHIVED
+            - COMING_SOON
+            description: Statut de publication
+          synopsis:
+            type: string
+            example: L'histoire de J. Robert Oppenheimer et du développement de la
+              bombe atomique.
+          tagline:
+            type: string
+            example: Le monde change pour toujours.
+          rating:
+            type: string
+            enum:
+            - G
+            - PG
+            - PG13
+            - R
+            - NC17
+            - UNRATED
+            - TV_MA
+            - TV_14
+            - TV_PG
+            - TV_G
+            description: Classification d'âge
+          releaseYear:
+            type: integer
+            example: 2023
+          posterUrl:
+            type: string
+            format: uri
+            example: https://cdn.primevideo.com/titles/oppenheimer/poster.jpg
+          backdropUrl:
+            type: string
+            format: uri
+            example: https://cdn.primevideo.com/titles/oppenheimer/backdrop.jpg
+          trailerUrl:
+            type: string
+            format: uri
+          imdbId:
+            type: string
+            description: Identifiant IMDb
+            example: tt15398776
+          imdbRating:
+            type: number
+            format: double
+            minimum: 0
+            maximum: 10
+            example: 8.3
+          genres:
+            type: array
+            items:
+              $ref: '#/components/schemas/Genre'
+          collections:
+            type: array
+            items:
+              $ref: '#/components/schemas/Collection'
+          technicalDetails:
+            $ref: '#/components/schemas/TechnicalDetails'
+          accessInfo:
+            $ref: '#/components/schemas/AccessInfo'
+          totalSeasonsCount:
+            type: integer
+            description: Nombre de saisons (uniquement pour les séries)
+            example: 3
+    TitleSummary:
+      type: object
+      description: Version allégée de Title pour les listes (évite l'over-fetching)
+      required:
+      - id
+      - originalTitle
+      - type
+      - rating
+      - posterUrl
+      - accessInfo
+      properties:
+        id:
+          type: string
+          format: uuid
+        originalTitle:
+          type: string
+        type:
+          type: string
+          enum:
+          - MOVIE
+          - SERIES
+          - DOCUMENTARY
+          - MINI_SERIES
+          - STAND_UP
+        rating:
+          type: string
+        releaseYear:
+          type: integer
+        posterUrl:
+          type: string
+          format: uri
+        imdbRating:
+          type: number
+          format: double
+        accessInfo:
+          $ref: '#/components/schemas/AccessInfo'
+    Season:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - seasonNumber
+        - title
+        - status
+        properties:
+          seasonNumber:
+            type: integer
+            example: 1
+          title:
+            type: string
+            example: Saison 1
+          synopsis:
+            type: string
+          posterUrl:
+            type: string
+            format: uri
+          releaseYear:
+            type: integer
+          episodesCount:
+            type: integer
+            example: 8
+          status:
+            type: string
+            enum:
+            - DRAFT
+            - PUBLISHED
+            - ARCHIVED
+    Episode:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - episodeNumber
+        - title
+        - status
+        - technicalDetails
+        properties:
+          episodeNumber:
+            type: integer
+            example: 1
+          title:
+            type: string
+            example: L'Arrivée
+          synopsis:
+            type: string
+          thumbnailUrl:
+            type: string
+            format: uri
+          status:
+            type: string
+            enum:
+            - DRAFT
+            - PUBLISHED
+            - ARCHIVED
+          technicalDetails:
+            $ref: '#/components/schemas/TechnicalDetails'
+    Account:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - email
+        - subscriptionStatus
+        properties:
+          email:
+            type: string
+            format: email
+            description: Adresse email du titulaire du compte
+            example: jean.dupont@example.com
+          subscriptionStatus:
+            type: string
+            enum:
+            - ACTIVE
+            - SUSPENDED
+            - CANCELLED
+            - TRIAL
+            - PAST_DUE
+            description: Statut de l'abonnement
+            example: ACTIVE
+          subscriptionPlan:
+            type: string
+            enum:
+            - FREE
+            - BASIC
+            - STANDARD
+            - PREMIUM
+            example: PREMIUM
+          subscriptionExpiresAt:
+            type: string
+            format: date-time
+            description: Date d'expiration de l'abonnement
+            example: '2025-12-31T23:59:59Z'
+          country:
+            type: string
+            description: Code pays ISO 3166-1 alpha-2 (affecte les droits de diffusion)
+            example: FR
+          phoneNumber:
+            type: string
+            example: '+33612345678'
+          twoFactorEnabled:
+            type: boolean
+            description: Authentification à deux facteurs activée
+            default: false
+    AccountSummary:
+      type: object
+      description: Version allégée du compte (sans données sensibles)
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        subscriptionStatus:
+          type: string
+          enum:
+          - ACTIVE
+          - SUSPENDED
+          - CANCELLED
+          - TRIAL
+          - PAST_DUE
+        subscriptionPlan:
+          type: string
+          enum:
+          - FREE
+          - BASIC
+          - STANDARD
+          - PREMIUM
+        subscriptionExpiresAt:
+          type: string
+          format: date-time
+        country:
+          type: string
+    Profile:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - displayName
+        - isKidsProfile
+        properties:
+          displayName:
+            type: string
+            minLength: 1
+            maxLength: 50
+            description: Nom d'affichage du profil
+            example: Jean
+          avatarUrl:
+            type: string
+            format: uri
+            example: https://cdn.primevideo.com/avatars/default_01.png
+          isKidsProfile:
+            type: boolean
+            description: Profil enfant avec restrictions de contenu
+            default: false
+          language:
+            type: string
+            description: Langue préférée de l'interface (ISO 639-1)
+            example: fr
+          maturityLevel:
+            type: string
+            enum:
+            - KIDS
+            - FAMILY
+            - TEEN
+            - MATURE
+            - ADULT
+            description: Niveau de maturité maximum autorisé pour ce profil
+            example: ADULT
+          parentalPinEnabled:
+            type: boolean
+            description: Code PIN parental activé pour ce profil
+            default: false
+          autoplayNextEpisode:
+            type: boolean
+            description: Lecture automatique de l'épisode suivant
+            default: true
+          autoplayPreviews:
+            type: boolean
+            description: Lecture automatique des aperçus
+            default: true
+          defaultAudioLanguage:
+            type: string
+            example: fr
+          defaultSubtitleLanguage:
+            type: string
+            example: fr
+    ProfileSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+        isKidsProfile:
+          type: boolean
+        maturityLevel:
+          type: string
+    Device:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - name
+        - type
+        - status
+        properties:
+          name:
+            type: string
+            description: Nom de l'appareil tel que défini par l'utilisateur
+            example: TV du salon
+          type:
+            type: string
+            enum:
+            - SMART_TV
+            - MOBILE
+            - TABLET
+            - WEB
+            - CONSOLE
+            - STREAMING_STICK
+            description: Type d'appareil
+          status:
+            type: string
+            enum:
+            - ACTIVE
+            - REVOKED
+            description: Statut de l'appareil
+          lastUsedAt:
+            type: string
+            format: date-time
+            description: Date de dernière utilisation
+            example: '2024-06-01T20:00:00Z'
+          ipAddress:
+            type: string
+            description: Dernière adresse IP connue (masquée partiellement)
+            example: 192.168.*.*
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: jean.dupont@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: SecurePass123!
+        deviceName:
+          type: string
+          description: Nom de l'appareil utilisé pour la connexion (pour l'enregistrement)
+          example: iPhone de Jean
+    RegisterRequest:
+      type: object
+      required:
+      - email
+      - password
+      - country
+      properties:
+        email:
+          type: string
+          format: email
+          example: nouveau@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          pattern: ^(?=.*[A-Z])(?=.*[0-9]).{8,}$
+          description: Au moins 8 caractères, une majuscule et un chiffre
+        country:
+          type: string
+          description: Code pays ISO 3166-1 alpha-2
+          example: FR
+    TokenResponse:
+      type: object
+      required:
+      - accessToken
+      - refreshToken
+      - tokenType
+      - expiresIn
+      properties:
+        accessToken:
+          type: string
+          description: JWT d'accès (courte durée — 1h)
+          example: eyJhbGciOiJIUzUxMiJ9...
+        refreshToken:
+          type: string
+          description: Token de rafraîchissement (longue durée — 30j)
+          example: eyJhbGciOiJIUzUxMiJ9...
+        tokenType:
+          type: string
+          default: Bearer
+        expiresIn:
+          type: integer
+          description: Durée de validité de l'access token en secondes
+          example: 3600
+    RefreshTokenRequest:
+      type: object
+      required:
+      - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Token de rafraîchissement obtenu lors de la connexion
+    CreateProfileRequest:
+      type: object
+      required:
+      - displayName
+      - isKidsProfile
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: Emma
+        avatarUrl:
+          type: string
+          format: uri
+        isKidsProfile:
+          type: boolean
+          example: false
+        maturityLevel:
+          type: string
+          enum:
+          - KIDS
+          - FAMILY
+          - TEEN
+          - MATURE
+          - ADULT
+          example: ADULT
+        language:
+          type: string
+          example: fr
+    UpdateProfileRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+        avatarUrl:
+          type: string
+          format: uri
+        language:
+          type: string
+        maturityLevel:
+          type: string
+          enum:
+          - KIDS
+          - FAMILY
+          - TEEN
+          - MATURE
+          - ADULT
+        autoplayNextEpisode:
+          type: boolean
+        autoplayPreviews:
+          type: boolean
+        defaultAudioLanguage:
+          type: string
+        defaultSubtitleLanguage:
+          type: string
+    SetParentalPinRequest:
+      type: object
+      required:
+      - pin
+      properties:
+        pin:
+          type: string
+          pattern: ^\d{4}$
+          description: Code PIN parental à 4 chiffres
+          example: '1234'
+    WatchSession:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - profileId
+        - titleId
+        - progressSeconds
+        - status
+        properties:
+          profileId:
+            type: string
+            format: uuid
+            description: Profil qui regarde
+          titleId:
+            type: string
+            format: uuid
+            description: Titre en cours de lecture
+          episodeId:
+            type: string
+            format: uuid
+            description: Épisode concerné (null si film)
+          progressSeconds:
+            type: integer
+            description: Position actuelle dans le contenu (en secondes)
+            example: 4320
+          durationSeconds:
+            type: integer
+            description: Durée totale du contenu (en secondes)
+            example: 10800
+          completionPercent:
+            type: number
+            format: double
+            description: Pourcentage de complétion (0.0 à 100.0)
+            example: 40.0
+          status:
+            type: string
+            enum:
+            - IN_PROGRESS
+            - COMPLETED
+            - ABANDONED
+            description: Statut de la session
+          deviceType:
+            type: string
+            enum:
+            - SMART_TV
+            - MOBILE
+            - TABLET
+            - WEB
+            - CONSOLE
+            - STREAMING_STICK
+          qualitySelected:
+            type: string
+            enum:
+            - SD
+            - HD_720P
+            - FHD_1080P
+            - UHD_4K
+          lastWatchedAt:
+            type: string
+            format: date-time
+            example: '2024-06-01T21:30:00Z'
+    UpdateWatchProgressRequest:
+      type: object
+      required:
+      - progressSeconds
+      - durationSeconds
+      properties:
+        progressSeconds:
+          type: integer
+          minimum: 0
+          description: Position actuelle en secondes
+          example: 4320
+        durationSeconds:
+          type: integer
+          minimum: 1
+          description: Durée totale du contenu en secondes
+          example: 10800
+        episodeId:
+          type: string
+          format: uuid
+          description: Épisode concerné (séries uniquement)
+        deviceType:
+          type: string
+          enum:
+          - SMART_TV
+          - MOBILE
+          - TABLET
+          - WEB
+          - CONSOLE
+          - STREAMING_STICK
+        qualitySelected:
+          type: string
+          enum:
+          - SD
+          - HD_720P
+          - FHD_1080P
+          - UHD_4K
+    PlaybackToken:
+      type: object
+      description: Token de lecture sécurisé avec URL de streaming et DRM
+      required:
+      - streamUrl
+      - token
+      - expiresAt
+      properties:
+        streamUrl:
+          type: string
+          format: uri
+          description: URL du flux HLS ou DASH
+          example: https://stream.primevideo.com/hls/title-abc/master.m3u8
+        token:
+          type: string
+          description: Token DRM signé (courte durée — 4h)
+          example: eyJhbGciOiJSUzI1NiJ9...
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration du token de streaming
+          example: '2024-06-01T22:00:00Z'
+        format:
+          type: string
+          enum:
+          - HLS
+          - DASH
+          description: Format du flux vidéo
+        drmType:
+          type: string
+          enum:
+          - WIDEVINE
+          - FAIRPLAY
+          - PLAYREADY
+          - NONE
+          description: Type de protection DRM selon l'appareil
+        availableQualities:
+          type: array
+          items:
+            type: string
+            enum:
+            - SD
+            - HD_720P
+            - FHD_1080P
+            - UHD_4K
+          example:
+          - FHD_1080P
+          - HD_720P
+          - SD
+        subtitleTracks:
+          type: array
+          description: Pistes de sous-titres disponibles
+          items:
+            type: object
+            properties:
+              language:
+                type: string
+                example: fr
+              label:
+                type: string
+                example: Français
+              url:
+                type: string
+                format: uri
+                example: https://stream.primevideo.com/subs/title-abc/fr.vtt
+        audioTracks:
+          type: array
+          description: Pistes audio disponibles
+          items:
+            type: object
+            properties:
+              language:
+                type: string
+                example: en
+              label:
+                type: string
+                example: English
+              codec:
+                type: string
+                example: EAC3
+    StartPlaybackRequest:
+      type: object
+      required:
+      - profileId
+      - deviceType
+      properties:
+        profileId:
+          type: string
+          format: uuid
+          description: Profil qui lance la lecture
+        episodeId:
+          type: string
+          format: uuid
+          description: Épisode à lire (séries uniquement)
+        deviceType:
+          type: string
+          enum:
+          - SMART_TV
+          - MOBILE
+          - TABLET
+          - WEB
+          - CONSOLE
+          - STREAMING_STICK
+        preferredQuality:
+          type: string
+          enum:
+          - SD
+          - HD_720P
+          - FHD_1080P
+          - UHD_4K
+          default: FHD_1080P
+        resumeFromProgress:
+          type: boolean
+          description: Reprendre depuis la dernière position sauvegardée
+          default: true
+    TimelineEventType:
+      type: string
+      enum:
+      - CAST_ON_SCREEN
+      - MUSIC_PLAYING
+      - FUN_FACT
+      - TRIVIA
+      - SCENE_LOCATION
+      description: 'Type d''événement X-Ray : CAST_ON_SCREEN = acteur visible à l''écran,
+        MUSIC_PLAYING = musique jouée à ce moment, FUN_FACT = anecdote sur la scène,
+        TRIVIA = information sur le tournage, SCENE_LOCATION = lieu de tournage
+
+        '
+    TimelineEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEntity'
+      - type: object
+        required:
+        - titleId
+        - eventType
+        - startTimeSeconds
+        - endTimeSeconds
+        properties:
+          titleId:
+            type: string
+            format: uuid
+          episodeId:
+            type: string
+            format: uuid
+            description: Épisode concerné (null si film)
+          eventType:
+            $ref: '#/components/schemas/TimelineEventType'
+          startTimeSeconds:
+            type: integer
+            description: Début de l'événement dans la vidéo (en secondes)
+            example: 255
+          endTimeSeconds:
+            type: integer
+            description: Fin de l'événement dans la vidéo (en secondes)
+            example: 330
+          person:
+            $ref: '#/components/schemas/Person'
+            description: Acteur à l'écran (si eventType = CAST_ON_SCREEN)
+          characterName:
+            type: string
+            description: Nom du personnage joué
+            example: Bruce Wayne
+          musicTitle:
+            type: string
+            description: Titre de la musique (si eventType = MUSIC_PLAYING)
+            example: Time
+          musicArtist:
+            type: string
+            description: Artiste de la musique
+            example: Hans Zimmer
+          text:
+            type: string
+            description: Texte de l'anecdote ou trivia
+            example: Cette scène a été tournée en 70mm IMAX.
+          imageUrl:
+            type: string
+            format: uri
+            description: Image associée à l'événement
+    WatchHistory:
+      type: object
+      description: Entrée dans l'historique de visionnage d'un profil
+      properties:
+        title:
+          $ref: '#/components/schemas/TitleSummary'
+        session:
+          $ref: '#/components/schemas/WatchSession'
+    WatchlistItem:
+      type: object
+      description: Un élément dans la liste de visionnage (Watchlist) d'un profil
+      required:
+      - id
+      - titleId
+      - addedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de l'entrée dans la watchlist
+          example: wl-5f3e9a1b-2c4d
+        titleId:
+          type: string
+          format: uuid
+          description: Identifiant du titre ajouté
+          example: ttl-8a2b4c6d
+        addedAt:
+          type: string
+          format: date-time
+          description: Date et heure d'ajout à la watchlist
+          example: '2026-03-15T20:30:00Z'
+        title:
+          description: Résumé du titre (fourni en réponse pour éviter un 2ème appel)
+          allOf:
+          - $ref: '#/components/schemas/TitleSummary'
+    AddToWatchlistRequest:
+      type: object
+      required:
+      - titleId
+      properties:
+        titleId:
+          type: string
+          format: uuid
+          description: Identifiant du titre à ajouter
+          example: ttl-8a2b4c6d
+    WatchlistPage:
+      type: object
+      description: Liste paginée des éléments de la watchlist
+      required:
+      - data
+      - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WatchlistItem'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    Review:
+      type: object
+      description: Avis et notation d'un utilisateur sur un titre
+      required:
+      - id
+      - titleId
+      - profileId
+      - rating
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de l'avis
+          example: rev-9d1e2f3a
+        titleId:
+          type: string
+          format: uuid
+          example: ttl-8a2b4c6d
+        profileId:
+          type: string
+          format: uuid
+          example: prf-1a2b3c4d
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Note de 1 à 5 étoiles
+          example: 4
+        comment:
+          type: string
+          maxLength: 2000
+          description: Commentaire textuel (optionnel)
+          example: Film absolument captivant, effets spéciaux époustouflants !
+        isVerifiedPurchase:
+          type: boolean
+          description: Indique si l'utilisateur a effectivement visionné le titre
+          example: true
+        helpfulVotes:
+          type: integer
+          description: Nombre de votes 'utile' reçus
+          example: 42
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-03-10T14:22:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-03-11T09:15:00Z'
+    ReviewSummary:
+      type: object
+      description: Résumé agrégé des avis d'un titre
+      required:
+      - titleId
+      - averageRating
+      - totalReviews
+      - ratingDistribution
+      properties:
+        titleId:
+          type: string
+          format: uuid
+        averageRating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          description: Note moyenne sur 5
+          example: 4.2
+        totalReviews:
+          type: integer
+          description: Nombre total d'avis
+          example: 1847
+        ratingDistribution:
+          type: object
+          description: Distribution des notes (nb d'avis par étoile)
+          properties:
+            '1':
+              type: integer
+              example: 52
+            '2':
+              type: integer
+              example: 89
+            '3':
+              type: integer
+              example: 201
+            '4':
+              type: integer
+              example: 613
+            '5':
+              type: integer
+              example: 892
+    CreateReviewRequest:
+      type: object
+      required:
+      - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          maxLength: 2000
+          example: Un chef-d'œuvre de la science-fiction moderne.
+    ReviewPage:
+      type: object
+      description: Liste paginée des avis
+      required:
+      - data
+      - summary
+      - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        summary:
+          $ref: '#/components/schemas/ReviewSummary'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    Recommendation:
+      type: object
+      description: Une recommandation personnalisée pour un profil
+      required:
+      - titleId
+      - score
+      - reason
+      properties:
+        titleId:
+          type: string
+          format: uuid
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Score de pertinence de la recommandation (0=faible, 1=très
+            pertinente)
+          example: 0.95
+        reason:
+          type: string
+          description: Raison de la recommandation (humainement lisible)
+          enum:
+          - BECAUSE_YOU_WATCHED
+          - TRENDING_IN_YOUR_REGION
+          - SIMILAR_TO_YOUR_WATCHLIST
+          - TOP_PICKS_FOR_YOU
+          - NEW_RELEASE_IN_YOUR_GENRE
+          example: BECAUSE_YOU_WATCHED
+        reasonContext:
+          type: string
+          description: 'Contexte de la raison (ex: nom du titre ayant déclenché la
+            reco)'
+          example: Interstellar
+        title:
+          allOf:
+          - $ref: '#/components/schemas/TitleSummary'
+    RecommendationPage:
+      type: object
+      required:
+      - data
+      - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    GroupWatchSession:
+      type: object
+      description: Session de visionnage en groupe synchronisé
+      required:
+      - id
+      - titleId
+      - hostProfileId
+      - status
+      - createdAt
+      - inviteCode
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de la session GroupWatch
+          example: gw-4a5b6c7d-8e9f
+        titleId:
+          type: string
+          format: uuid
+          description: Titre en cours de visionnage
+        episodeId:
+          type: string
+          format: uuid
+          description: Épisode spécifique (si série)
+          nullable: true
+        hostProfileId:
+          type: string
+          format: uuid
+          description: Profil de l'hôte de la session
+        status:
+          type: string
+          enum:
+          - WAITING
+          - PLAYING
+          - PAUSED
+          - ENDED
+          example: PLAYING
+        inviteCode:
+          type: string
+          description: Code d'invitation à 8 caractères à partager
+          example: PRIMEGW7
+        currentPositionSeconds:
+          type: integer
+          description: Position actuelle de lecture en secondes (synchronisée)
+          example: 1842
+        maxParticipants:
+          type: integer
+          default: 100
+          description: Nombre maximum de participants
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupWatchParticipant'
+        createdAt:
+          type: string
+          format: date-time
+    GroupWatchParticipant:
+      type: object
+      description: Participant à une session GroupWatch
+      required:
+      - profileId
+      - displayName
+      - joinedAt
+      - role
+      properties:
+        profileId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          example: Haibonwa
+        avatarUrl:
+          type: string
+          format: uri
+          example: https://cdn.primevideo.example.com/avatars/user42.webp
+        role:
+          type: string
+          enum:
+          - HOST
+          - VIEWER
+          example: VIEWER
+        joinedAt:
+          type: string
+          format: date-time
+    CreateGroupWatchRequest:
+      type: object
+      required:
+      - titleId
+      properties:
+        titleId:
+          type: string
+          format: uuid
+          example: ttl-8a2b4c6d
+        episodeId:
+          type: string
+          format: uuid
+          nullable: true
+        maxParticipants:
+          type: integer
+          minimum: 2
+          maximum: 100
+          default: 100
+    GroupWatchControlRequest:
+      type: object
+      description: Commande de contrôle de la lecture (hôte uniquement)
+      required:
+      - action
+      properties:
+        action:
+          type: string
+          enum:
+          - PLAY
+          - PAUSE
+          - SEEK
+          example: SEEK
+        positionSeconds:
+          type: integer
+          description: Requis si action=SEEK. Position cible en secondes.
+          example: 2340
+    GetPartnerTitles200Response:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/IngestionJob'
+    GetPartnerTitlesStatusParameter:
+      type: string
+      enum:
+      - UPLOADING
+      - PROCESSING
+      - PENDING_REVIEW
+      - APPROVED
+      - REJECTED
+      - PUBLISHED
+      - ARCHIVED
+    StringSchema:
+      type: string
+      example: /api/v1/groupwatch/gw-4a5b6c7d
+    UuidSchema:
+      type: string
+      format: uuid
+    DateSchema:
+      type: string
+      format: date
+    GetAdminIngestionQueue200Response:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/IngestionJob'
+    GetAdminTitlesTitleidLicenses200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/License'
+    GetTitles200Response:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/TitleSummary'
+    GetTitlesTypeParameter:
+      type: string
+      enum:
+      - MOVIE
+      - SERIES
+      - DOCUMENTARY
+      - MINI_SERIES
+      - STAND_UP
+    IntegerSchema:
+      type: integer
+      minimum: 1
+    GetTitlesRatingParameter:
+      type: string
+      enum:
+      - G
+      - PG
+      - PG13
+      - R
+      - NC17
+      - TV_MA
+      - TV_14
+      - TV_PG
+      - TV_G
+    GetTitlesAccesstypeParameter:
+      type: string
+      enum:
+      - INCLUDED
+      - RENT
+      - BUY
+      - CHANNEL_SUBSCRIPTION
+    GetTitlesSortParameter:
+      type: string
+      enum:
+      - releaseYear_desc
+      - releaseYear_asc
+      - imdbRating_desc
+      - title_asc
+      default: imdbRating_desc
+    GetTitlesTitleidCasting200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/CastingMember'
+    GetTitlesTitleidSeasons200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/Season'
+    GetTitlesTitleidSeasonsSeasonnumberEpisodes200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/Episode'
+    GetGenres200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/Genre'
+    GetCollections200Response:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/Collection'
+    GetCollectionsTypeParameter:
+      type: string
+      enum:
+      - FRANCHISE
+      - UNIVERSE
+      - THEMATIC
+      - EDITORIAL
+    GetCollectionsCollectionidTitles200Response:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/TitleSummary'
+    GetAccountsMeProfiles200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/ProfileSummary'
+    GetAccountsMeDevices200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/Device'
+    GetProfilesProfileidWatchProgress200Response:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/WatchHistory'
+    GetProfilesProfileidWatchProgressStatusParameter:
+      type: string
+      enum:
+      - IN_PROGRESS
+      - COMPLETED
+      - ABANDONED
+    TitlesTitleidXrayTimestampsecondsParameter:
+      type: integer
+      minimum: 0
+      example: 255
+    GetTitlesTitleidXray200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/TimelineEvent'
+    PostAdminTitlesTitleidXrayRequest:
+      type: object
+      required:
+      - eventType
+      - startTimeSeconds
+      - endTimeSeconds
+      properties:
+        episodeId:
+          type: string
+          format: uuid
+        eventType:
+          $ref: '#/components/schemas/TimelineEventType'
+        startTimeSeconds:
+          type: integer
+          minimum: 0
+        endTimeSeconds:
+          type: integer
+          minimum: 1
+        personId:
+          type: string
+          format: uuid
+          description: Requis si eventType = CAST_ON_SCREEN
+        characterName:
+          type: string
+        musicTitle:
+          type: string
+          description: Requis si eventType = MUSIC_PLAYING
+        musicArtist:
+          type: string
+        text:
+          type: string
+          description: Requis si eventType = FUN_FACT ou TRIVIA
+    TitlesTitleidReviewsSortParameter:
+      type: string
+      enum:
+      - MOST_RECENT
+      - MOST_HELPFUL
+      - HIGHEST_RATING
+      - LOWEST_RATING
+      default: MOST_HELPFUL
+    GetProfilesProfileidRecommendationsReasonParameter:
+      type: string
+      enum:
+      - BECAUSE_YOU_WATCHED
+      - TRENDING_IN_YOUR_REGION
+      - SIMILAR_TO_YOUR_WATCHLIST
+      - TOP_PICKS_FOR_YOU
+      - NEW_RELEASE_IN_YOUR_GENRE
+    PostGroupwatchSessionidJoinRequest:
+      type: object
+      required:
+      - inviteCode
+      properties:
+        inviteCode:
+          type: string
+          description: Code d'invitation à 8 caractères
+          example: PRIMEGW7
+    IntegerSchema1:
+      type: integer
+    '#ComponentsParametersPageparam':
+      type: integer
+      minimum: 1
+      default: 1
+    '#ComponentsParametersLimitparam':
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 20
