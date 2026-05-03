@@ -28,18 +28,18 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '../../components/parameters.yaml#/PageParam'
-        - $ref: '../../components/parameters.yaml#/LimitParam'
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
       responses:
         '200':
           description: "Watchlist récupérée avec succès"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
             Cache-Control:
               schema:
                 type: string
@@ -47,7 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/WatchlistPage'
+                $ref: '../components/schemas/social.yaml#/WatchlistPage'
               example:
                 data:
                   - id: "wl-5f3e9a1b"
@@ -64,15 +64,15 @@ paths:
                   totalItems: 37
                   totalPages: 2
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
-          $ref: '../../components/responses.yaml#/Forbidden'
+          $ref: '../components/responses.yaml#/Forbidden'
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
     post:
       tags: [Watchlist]
@@ -85,7 +85,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/social.yaml#/AddToWatchlistRequest'
+              $ref: '../components/schemas/social.yaml#/AddToWatchlistRequest'
             example:
               titleId: "ttl-8a2b4c6d"
       responses:
@@ -98,27 +98,27 @@ paths:
                 type: string
                 example: "/api/v1/profiles/prf-1a2b3c4d/watchlist/wl-5f3e9a1b"
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/WatchlistItem'
+                $ref: '../components/schemas/social.yaml#/WatchlistItem'
         '400':
-          $ref: '../../components/responses.yaml#/BadRequest'
+          $ref: '../components/responses.yaml#/BadRequest'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
-          $ref: '../../components/responses.yaml#/Forbidden'
+          $ref: '../components/responses.yaml#/Forbidden'
         '404':
           description: "Titre introuvable"
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
               example:
                 type: "https://api.primevideo.example.com/errors/not-found"
                 title: "Titre introuvable"
@@ -130,7 +130,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
               example:
                 type: "https://api.primevideo.example.com/errors/conflict"
                 title: "Conflit de ressource"
@@ -138,9 +138,9 @@ paths:
                 detail: "Ce titre est déjà présent dans votre Watchlist."
                 instance: "/api/v1/profiles/prf-1a2b3c4d/watchlist"
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   /profiles/{profileId}/watchlist/{watchlistItemId}:
     parameters:
@@ -166,21 +166,21 @@ paths:
           description: "Titre retiré de la Watchlist avec succès"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
-          $ref: '../../components/responses.yaml#/Forbidden'
+          $ref: '../components/responses.yaml#/Forbidden'
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   # ============================================================
   # REVIEWS & RATINGS
@@ -208,18 +208,18 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '../../components/parameters.yaml#/PageParam'
-        - $ref: '../../components/parameters.yaml#/LimitParam'
+        - $ref: '../components/parameters.yaml#/PageParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
       responses:
         '200':
           description: "Avis récupérés avec succès"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
             Cache-Control:
               schema:
                 type: string
@@ -227,7 +227,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/ReviewPage'
+                $ref: '../components/schemas/social.yaml#/ReviewPage'
               example:
                 summary:
                   titleId: "ttl-8a2b4c6d"
@@ -252,11 +252,11 @@ paths:
                   totalItems: 1847
                   totalPages: 93
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
     post:
       tags: [Reviews]
@@ -269,7 +269,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/social.yaml#/CreateReviewRequest'
+              $ref: '../components/schemas/social.yaml#/CreateReviewRequest'
             example:
               rating: 5
               comment: "Un chef-d'œuvre de la science-fiction moderne."
@@ -282,25 +282,25 @@ paths:
                 type: string
                 example: "/api/v1/titles/ttl-8a2b4c6d/reviews/rev-9d1e2f3a"
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/Review'
+                $ref: '../components/schemas/social.yaml#/Review'
         '400':
-          $ref: '../../components/responses.yaml#/BadRequest'
+          $ref: '../components/responses.yaml#/BadRequest'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '409':
           description: "L'utilisateur a déjà publié un avis pour ce titre"
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
               example:
                 type: "https://api.primevideo.example.com/errors/conflict"
                 title: "Avis déjà existant"
@@ -308,9 +308,9 @@ paths:
                 detail: "Vous avez déjà soumis un avis pour ce titre. Utilisez PATCH pour le modifier."
                 instance: "/api/v1/titles/ttl-8a2b4c6d/reviews"
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   /titles/{titleId}/reviews/{reviewId}:
     parameters:
@@ -337,31 +337,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/social.yaml#/CreateReviewRequest'
+              $ref: '../components/schemas/social.yaml#/CreateReviewRequest'
       responses:
         '200':
           description: "Avis mis à jour avec succès"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/Review'
+                $ref: '../components/schemas/social.yaml#/Review'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
-          $ref: '../../components/responses.yaml#/Forbidden'
+          $ref: '../components/responses.yaml#/Forbidden'
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
     delete:
       tags: [Reviews]
@@ -374,21 +374,21 @@ paths:
           description: "Avis supprimé avec succès"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
-          $ref: '../../components/responses.yaml#/Forbidden'
+          $ref: '../components/responses.yaml#/Forbidden'
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   # ============================================================
   # RECOMMENDATIONS
@@ -408,7 +408,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '../../components/parameters.yaml#/LimitParam'
+        - $ref: '../components/parameters.yaml#/LimitParam'
         - name: reason
           in: query
           required: false
@@ -426,11 +426,11 @@ paths:
           description: "Recommandations personnalisées récupérées"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
             Cache-Control:
               schema:
                 type: string
@@ -438,7 +438,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/RecommendationPage'
+                $ref: '../components/schemas/social.yaml#/RecommendationPage'
               example:
                 data:
                   - titleId: "ttl-2a3b4c5d"
@@ -455,15 +455,15 @@ paths:
                   totalItems: 50
                   totalPages: 3
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
-          $ref: '../../components/responses.yaml#/Forbidden'
+          $ref: '../components/responses.yaml#/Forbidden'
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   # ============================================================
   # GROUP WATCH
@@ -480,7 +480,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/social.yaml#/CreateGroupWatchRequest'
+              $ref: '../components/schemas/social.yaml#/CreateGroupWatchRequest'
             example:
               titleId: "ttl-8a2b4c6d"
               maxParticipants: 10
@@ -493,15 +493,15 @@ paths:
                 type: string
                 example: "/api/v1/groupwatch/gw-4a5b6c7d"
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+                $ref: '../components/schemas/social.yaml#/GroupWatchSession'
               example:
                 id: "gw-4a5b6c7d-8e9f"
                 titleId: "ttl-8a2b4c6d"
@@ -513,13 +513,13 @@ paths:
                 participants: []
                 createdAt: "2026-05-03T10:00:00Z"
         '400':
-          $ref: '../../components/responses.yaml#/BadRequest'
+          $ref: '../components/responses.yaml#/BadRequest'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   /groupwatch/{sessionId}:
     parameters:
@@ -541,25 +541,25 @@ paths:
           description: "État de la session récupéré"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+                $ref: '../components/schemas/social.yaml#/GroupWatchSession'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
-          $ref: '../../components/responses.yaml#/Forbidden'
+          $ref: '../components/responses.yaml#/Forbidden'
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   /groupwatch/{sessionId}/join:
     parameters:
@@ -593,25 +593,25 @@ paths:
           description: "Session rejointe avec succès"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+                $ref: '../components/schemas/social.yaml#/GroupWatchSession'
         '400':
-          $ref: '../../components/responses.yaml#/BadRequest'
+          $ref: '../components/responses.yaml#/BadRequest'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
           description: "Session pleine ou code invalide"
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
               example:
                 type: "https://api.primevideo.example.com/errors/forbidden"
                 title: "Accès refusé"
@@ -619,11 +619,11 @@ paths:
                 detail: "La session est complète ou le code d'invitation est invalide."
                 instance: "/api/v1/groupwatch/gw-4a5b6c7d/join"
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   /groupwatch/{sessionId}/control:
     parameters:
@@ -644,7 +644,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/social.yaml#/GroupWatchControlRequest'
+              $ref: '../components/schemas/social.yaml#/GroupWatchControlRequest'
             examples:
               pause:
                 summary: "Mettre en pause"
@@ -660,25 +660,25 @@ paths:
           description: "Commande de lecture appliquée et synchronisée"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/social.yaml#/GroupWatchSession'
+                $ref: '../components/schemas/social.yaml#/GroupWatchSession'
         '400':
-          $ref: '../../components/responses.yaml#/BadRequest'
+          $ref: '../components/responses.yaml#/BadRequest'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '403':
           description: "Seul l'hôte peut contrôler la lecture"
           content:
             application/json:
               schema:
-                $ref: '../../components/schemas/errors.yaml#/ProblemDetails'
+                $ref: '../components/schemas/errors.yaml#/ProblemDetails'
               example:
                 type: "https://api.primevideo.example.com/errors/forbidden"
                 title: "Action réservée à l'hôte"
@@ -686,11 +686,11 @@ paths:
                 detail: "Seul le profil hôte peut envoyer des commandes de contrôle."
                 instance: "/api/v1/groupwatch/gw-4a5b6c7d/control"
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'
 
   /groupwatch/{sessionId}/leave:
     parameters:
@@ -711,16 +711,16 @@ paths:
           description: "Session quittée avec succès"
           headers:
             X-RateLimit-Limit:
-              $ref: '../../components/headers.yaml#/RateLimitLimit'
+              $ref: '../components/headers.yaml#/RateLimitLimit'
             X-RateLimit-Remaining:
-              $ref: '../../components/headers.yaml#/RateLimitRemaining'
+              $ref: '../components/headers.yaml#/RateLimitRemaining'
             X-RateLimit-Reset:
-              $ref: '../../components/headers.yaml#/RateLimitReset'
+              $ref: '../components/headers.yaml#/RateLimitReset'
         '401':
-          $ref: '../../components/responses.yaml#/Unauthorized'
+          $ref: '../components/responses.yaml#/Unauthorized'
         '404':
-          $ref: '../../components/responses.yaml#/NotFound'
+          $ref: '../components/responses.yaml#/NotFound'
         '429':
-          $ref: '../../components/responses.yaml#/RateLimitError'
+          $ref: '../components/responses.yaml#/RateLimitError'
         '500':
-          $ref: '../../components/responses.yaml#/InternalServerError'
+          $ref: '../components/responses.yaml#/InternalServerError'

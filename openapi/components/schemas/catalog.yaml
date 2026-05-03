@@ -54,6 +54,35 @@ PaginatedResponse:
           type: integer
           example: 20
 
+Pagination:
+  type: object
+  description: "Métadonnées de pagination réutilisables"
+  required:
+    - page
+    - limit
+    - totalItems
+    - totalPages
+  properties:
+    page:
+      type: integer
+      minimum: 1
+      description: "Page courante"
+      example: 1
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+      description: "Nombre d'éléments par page"
+      example: 20
+    totalItems:
+      type: integer
+      description: "Nombre total d'éléments"
+      example: 250
+    totalPages:
+      type: integer
+      description: "Nombre total de pages"
+      example: 13
+
 # ==============================================================
 # CATALOGUE
 # ==============================================================
