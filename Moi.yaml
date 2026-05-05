@@ -1,0 +1,176 @@
+openapi: 3.0.3
+info: 
+  title : Prime Video Clone API
+  version: 1.0.0
+  description: Spécification OpenAPI 3.0 pour le clone de Prime Video (Approche Domain-Driven Design).
+servers:
+- url: http://localhost:8080/api/v1
+  description: Serv de DEV
+security:
+- bearerAuth: []
+tags:
+- name: Partner
+  description: Espace partenaire — soumission et gestion des contenus (ROLE_PARTNER)
+- name: Admin
+  description: Back-office Super Admin — approbation, licences, statistiques globales
+    (ROLE_SUPER_ADMIN)
+- name: Catalog
+  description: Gestion du catalogue de titres (Films, Séries, Documentaires)
+- name: Genres
+  description: Gestion des genres
+- name: Collections
+  description: Gestion des collections et franchises
+- name: Persons
+  description: Gestion des personnes (Acteurs, Réalisateurs)
+- name: Authentication
+  description: Authentification, inscription et gestion des tokens JWT
+- name: Accounts
+  description: Gestion du compte utilisateur (infos de facturation, abonnement)
+- name: Profiles
+  description: Gestion des profils de visionnage (multi-profils avec contrôle parental)
+- name: Devices
+  description: Gestion des appareils enregistrés
+- name: Playback
+  description: Lancement de la lecture, token de streaming sécurisé (DRM)
+- name: WatchProgress
+  description: Suivi de la progression de lecture et historique
+- name: XRay
+  description: Métadonnées temporelles X-Ray (acteurs à l'écran, musique, anecdotes)
+- name: Watchlist
+  description: Gestion de la liste de visionnage (Watchlist) par profil
+- name: Reviews
+  description: Avis et notations des utilisateurs sur les titres
+- name: Recommendations
+  description: Recommandations personnalisées basées sur le profil
+- name: GroupWatch
+  description: Sessions de visionnage synchronisé en groupe
+paths:
+  /partner/titles/:
+    get:
+      tags:
+      - Partner
+      summary: lister les titre soumis
+      operationId: listPartnerTitles
+      description: Retourne uniquement les titres appartenant au partenaire connecté.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameter/LimitParam'
+      - name: status
+
+components:
+  parameters:
+    PageParam:
+      name: page
+      in : query
+      description: Numéro de la page pour la pagination
+      required: false
+      schema:
+       $ref: 
+
+  schemas:
+    BaseEntity:
+      type: object
+      description: Propriétés communes à toutes les entités
+      required:
+      - id
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de la ressource
+          example: 550e8400-e29b-41d4-a716-446655440000
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création (ISO 8601)
+          example: '2024-01-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière mise à jour (ISO 8601)
+          example: '2024-06-01T14:00:00Z'
+          
+    ProblemDetails:
+      type: object
+      description: Format d'erreur standardisé selon RFC 7807
+      required:
+      - type 
+      - title
+      - status
+      properties:
+        type:
+          type: string 
+          format: uri
+          description: URI identifiant le type d'erreur
+        title:
+          type: string
+          description: Résumé court et lisible du problème
+        status:
+          type: integer
+          format: int 32
+          description: Code de statut HTTP
+        detail:
+          type: string
+          description: Explication détaillée spécifique à cette occurrence
+        instance:
+          type: string
+          format: uri
+          description: URI identifiant l'occurrence spécifique du problème
+        correlationId:
+          type: string
+          format: uuid
+          description: ID de corrélation pour le traçage
+    ValidationError:
+      allOf:
+      - $ref: '#/components/schemas/ProblemDetails'
+      - type: object
+        properties:
+          errors:
+            type: array
+            description: Liste détaillée des erreurs de validation
+            items:
+              type: object
+              properties:
+                field:
+                  type: string
+                code:
+                  type: string
+                message:
+                  type: string
+    PaginatedResponse:
+      type: object
+      description: Envellop pour les reponses paginees
+      required:
+      - data
+      - meta
+      properties:
+        meta:
+          type: object
+          required:
+          - totalItems
+          - totalPages
+          - currentPage
+          - itemsPerPage
+          properties:
+            totalItems:
+              type: integer
+              example: 250
+            totalPages:
+              type: integer
+              example: 13
+            currentPage:
+              type: integer
+              example: 1
+            itemsPerPage:
+              type: integer
+              example: 20
+
+    '#ComponentsParametersLimitparam':
+      type: integer
+      minimum: 1
+      maximum: 200
+      default: 20

@@ -45,6 +45,8 @@ tags:
   description: Recommandations personnalisées basées sur le profil
 - name: GroupWatch
   description: Sessions de visionnage synchronisé en groupe
+- name: Voice Assistant
+  description: Traiter les recherches et commandes vocales de l'utilisateur
 paths:
   /partner/titles:
     get:
@@ -2568,6 +2570,44 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /assistant/voice-command:
+    post:
+      tags:
+      - Voice Assistant
+      summary: Traiter une recherche ou commande vocale
+      operationId: processVoiceCommand
+      description: Reçoit un transcript textuel issu d'une commande vocale et retourne
+        l'action à effectuer.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceCommandRequest'
+      responses:
+        '200':
+          description: Intention identifiée avec succès
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceCommandResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
     bearerAuth:
@@ -4733,3 +4773,30 @@ components:
       minimum: 1
       maximum: 100
       default: 20
+    VoiceCommandRequest:
+      type: object
+      required:
+      - transcript
+      properties:
+        transcript:
+          type: string
+          example: Joue le dernier épisode de ma série
+    VoiceCommandResponse:
+      type: object
+      properties:
+        action:
+          type: string
+          enum:
+          - navigate
+          - play
+          - search
+          - info
+          example: navigate
+        targetId:
+          type: string
+          description: Identifiant de la ressource ciblée (film, série, page)
+          example: e4fc1fbb-1b34-5656-f7fb-6fb33a2a3707
+        message:
+          type: string
+          description: Message de confirmation à lire par l'assistant
+          example: D'accord, je lance votre contenu.
