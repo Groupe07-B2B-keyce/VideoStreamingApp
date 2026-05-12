@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Catalogue')}"></head>
+<body>
+    <div class="app-container">
+        <header th:replace="~{layout :: header}"></header>
+        <div class="main-layout">
+            <aside th:replace="~{layout :: sidebar}"></aside>
+            <main class="content-area">
+                <div class="category-pills">
+                    <button class="pill active">Tout</button>
+                    <button class="pill">Action</button>
+                    <button class="pill">Drame</button>
+                    <button class="pill">Comédie</button>
+                    <button class="pill">Science-Fiction</button>
+                </div>
+
+                <div id="view-grid" class="grid-container">
+                    <div id="no-results" style="display: none; grid-column: 1/-1; text-align: center; color: var(--yt-text-secondary); padding: 60px;">
+                        <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                        <span>Pas de résultat pour cette recherche</span>
+                    </div>
+
+                    <div id="grid-loader" class="loader-container">
+                        <div class="spinner"></div>
+                        <span>Recherche intelligente en cours...</span>
+                    </div>
+
+                    <!-- Movie Cards -->
+                    <div th:each="t : ${titles}" class="card" th:attr="data-title=${t.originalTitle}">
+                        <div class="card-thumbnail">
+                            <img th:if="${t.posterUrl != null}" th:src="${t.posterUrl}" alt="poster">
+                            <div th:unless="${t.posterUrl != null}" class="placeholder-poster">
+                                <i class="fas fa-film"></i>
+                            </div>
+                            <span class="rating-badge" th:text="${t.rating}">PG13</span>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-avatar" th:text="${#strings.substring(t.originalTitle,0,1)}">O</div>
+                            <div class="card-details">
+                                <div class="card-title" th:text="${t.originalTitle}">Titre du film</div>
+                                <div class="card-subtitle">
+                                    <span th:text="${t.releaseYear}">2023</span> • 
+                                    <span th:text="${t.type}">MOVIE</span>
+                                </div>
+                                <div class="card-meta">
+                                    <i class="fas fa-star" style="color: var(--yt-accent);"></i>
+                                    <span th:text="${t.imdbRating}">8.3</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script th:replace="~{layout :: scripts}"></script>
+    <script>
+        function handleSearch(event) {
+            const query = event.target.value.toLowerCase();
+            filterGrid(query);
+        }
+
+        function filterGrid(query) {
+            const cards = document.querySelectorAll('.card');
+            let count = 0;
+            cards.forEach(card => {
+                const title = card.getAttribute('data-title').toLowerCase();
+                if (title.includes(query)) {
+                    card.style.display = '';
+                    count++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            document.getElementById('no-results').style.display = (count === 0 && cards.length > 0) ? 'block' : 'none';
+        }
+
+        function handleImageSearch(input) {
+            if (!input.files || !input.files[0]) return;
+            
+            const grid = document.getElementById('view-grid');
+            const loader = document.getElementById('grid-loader');
+            const noResults = document.getElementById('no-results');
+            
+            grid.classList.add('searching-pulse');
+            loader.style.display = 'flex';
+            noResults.style.display = 'none';
+
+            // Simulation d'une recherche par IA
+            setTimeout(() => {
+                grid.classList.remove('searching-pulse');
+                loader.style.display = 'none';
+                
+                // Pour la démo, on simule "aucun résultat" si c'est la première fois, 
+                // ou on filtre sur "Oppenheimer" pour montrer que ça marche.
+                filterGrid('oppenheimer');
+                showToast("Recherche visuelle terminée : 1 résultat trouvé.");
+            }, 2000);
+        }
+
+        function startVoiceSearch() {
+            showToast("Assistant vocal activé... Dites 'Lance Oppenheimer'");
+        }
+    </script>
+</body>
+</html>

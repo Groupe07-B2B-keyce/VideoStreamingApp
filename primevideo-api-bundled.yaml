@@ -5,7 +5,7 @@ info:
   description: Spécification OpenAPI 3.0 pour le clone de Prime Video (Approche Domain-Driven
     Design).
 servers:
-- url: http://localhost:8080/api/v1
+- url: http://localhost:8080
   description: Serveur de développement local
 security:
 - bearerAuth: []
@@ -48,7 +48,7 @@ tags:
 - name: Voice Assistant
   description: Traiter les recherches et commandes vocales de l'utilisateur
 paths:
-  /partner/titles:
+  /api/v1/partner/titles:
     get:
       tags:
       - Partner
@@ -161,7 +161,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /partner/titles/{jobId}:
+  /api/v1/partner/titles/{jobId}:
     parameters:
     - name: jobId
       in: path
@@ -207,7 +207,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /partner/analytics/{titleId}:
+  /api/v1/partner/analytics/{titleId}:
     parameters:
     - name: titleId
       in: path
@@ -273,7 +273,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /admin/ingestion-queue:
+  /api/v1/admin/ingestion-queue:
     get:
       tags:
       - Admin
@@ -308,7 +308,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /admin/ingestion-queue/{jobId}/status:
+  /api/v1/admin/ingestion-queue/{jobId}/status:
     parameters:
     - name: jobId
       in: path
@@ -369,7 +369,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /admin/titles/{titleId}/licenses:
+  /api/v1/admin/titles/{titleId}/licenses:
     parameters:
     - name: titleId
       in: path
@@ -476,7 +476,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /admin/stats:
+  /api/v1/admin/stats:
     get:
       tags:
       - Admin
@@ -516,7 +516,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles:
+  /api/v1/titles:
     get:
       tags:
       - Catalog
@@ -610,7 +610,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}:
+  /api/v1/titles/{titleId}:
     parameters:
     - name: titleId
       in: path
@@ -692,7 +692,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}/casting:
+  /api/v1/titles/{titleId}/casting:
     parameters:
     - name: titleId
       in: path
@@ -736,7 +736,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}/seasons:
+  /api/v1/titles/{titleId}/seasons:
     parameters:
     - name: titleId
       in: path
@@ -776,7 +776,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}/seasons/{seasonNumber}/episodes:
+  /api/v1/titles/{titleId}/seasons/{seasonNumber}/episodes:
     parameters:
     - name: titleId
       in: path
@@ -816,7 +816,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /genres:
+  /api/v1/genres:
     get:
       tags:
       - Genres
@@ -851,7 +851,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /collections:
+  /api/v1/collections:
     get:
       tags:
       - Collections
@@ -884,7 +884,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /collections/{collectionId}/titles:
+  /api/v1/collections/{collectionId}/titles:
     parameters:
     - name: collectionId
       in: path
@@ -921,7 +921,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /auth/register:
+  /api/v1/auth/register:
     post:
       tags:
       - Authentication
@@ -977,7 +977,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /auth/login:
+  /api/v1/auth/login:
     post:
       tags:
       - Authentication
@@ -1034,7 +1034,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /auth/refresh:
+  /api/v1/auth/refresh:
     post:
       tags:
       - Authentication
@@ -1073,7 +1073,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /auth/logout:
+  /api/v1/auth/logout:
     post:
       tags:
       - Authentication
@@ -1099,7 +1099,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /accounts/me:
+  /api/v1/accounts/me:
     get:
       tags:
       - Accounts
@@ -1135,7 +1135,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /accounts/me/profiles:
+  /api/v1/accounts/me/profiles:
     get:
       tags:
       - Profiles
@@ -1234,7 +1234,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /accounts/me/profiles/{profileId}:
+  /api/v1/accounts/me/profiles/{profileId}:
     parameters:
     - name: profileId
       in: path
@@ -1358,7 +1358,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /accounts/me/profiles/{profileId}/parental-pin:
+  /api/v1/accounts/me/profiles/{profileId}/parental-pin:
     parameters:
     - name: profileId
       in: path
@@ -1404,7 +1404,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /accounts/me/devices:
+  /api/v1/accounts/me/devices:
     get:
       tags:
       - Devices
@@ -1443,7 +1443,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /accounts/me/devices/{deviceId}:
+  /api/v1/accounts/me/devices/{deviceId}:
     parameters:
     - name: deviceId
       in: path
@@ -1479,7 +1479,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}/playback:
+  /api/v1/titles/{titleId}/playback:
     parameters:
     - name: titleId
       in: path
@@ -1573,7 +1573,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /profiles/{profileId}/watch-progress:
+  /api/v1/profiles/{profileId}/watch-progress:
     parameters:
     - name: profileId
       in: path
@@ -1639,7 +1639,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /profiles/{profileId}/watch-progress/{titleId}:
+  /api/v1/profiles/{profileId}/watch-progress/{titleId}:
     parameters:
     - name: profileId
       in: path
@@ -1758,7 +1758,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}/xray:
+  /api/v1/titles/{titleId}/xray:
     parameters:
     - name: titleId
       in: path
@@ -1839,7 +1839,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /admin/titles/{titleId}/xray:
+  /api/v1/admin/titles/{titleId}/xray:
     parameters:
     - name: titleId
       in: path
@@ -1896,7 +1896,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /profiles/{profileId}/watchlist:
+  /api/v1/profiles/{profileId}/watchlist:
     parameters:
     - name: profileId
       in: path
@@ -2023,7 +2023,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /profiles/{profileId}/watchlist/{watchlistItemId}:
+  /api/v1/profiles/{profileId}/watchlist/{watchlistItemId}:
     parameters:
     - name: profileId
       in: path
@@ -2062,7 +2062,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}/reviews:
+  /api/v1/titles/{titleId}/reviews:
     parameters:
     - name: titleId
       in: path
@@ -2185,7 +2185,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /titles/{titleId}/reviews/{reviewId}:
+  /api/v1/titles/{titleId}/reviews/{reviewId}:
     parameters:
     - name: titleId
       in: path
@@ -2261,7 +2261,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /profiles/{profileId}/recommendations:
+  /api/v1/profiles/{profileId}/recommendations:
     parameters:
     - name: profileId
       in: path
@@ -2325,7 +2325,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /groupwatch:
+  /api/v1/groupwatch:
     post:
       tags:
       - GroupWatch
@@ -2377,7 +2377,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /groupwatch/{sessionId}:
+  /api/v1/groupwatch/{sessionId}:
     parameters:
     - name: sessionId
       in: path
@@ -2416,7 +2416,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /groupwatch/{sessionId}/join:
+  /api/v1/groupwatch/{sessionId}/join:
     parameters:
     - name: sessionId
       in: path
@@ -2472,7 +2472,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /groupwatch/{sessionId}/control:
+  /api/v1/groupwatch/{sessionId}/control:
     parameters:
     - name: sessionId
       in: path
@@ -2538,7 +2538,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /groupwatch/{sessionId}/leave:
+  /api/v1/groupwatch/{sessionId}/leave:
     parameters:
     - name: sessionId
       in: path
@@ -2570,7 +2570,7 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /assistant/voice-command:
+  /api/v1/assistant/voice-command:
     post:
       tags:
       - Voice Assistant
@@ -2706,14 +2706,14 @@ components:
       description: Numéro de la page pour la pagination
       required: false
       schema:
-        $ref: '#/components/schemas/#ComponentsParametersPageparam'
+        $ref: '#/components/schemas/PageParam'
     LimitParam:
       name: limit
       in: query
       description: Nombre maximal d'éléments par page
       required: false
       schema:
-        $ref: '#/components/schemas/#ComponentsParametersLimitparam'
+        $ref: '#/components/schemas/LimitParam'
   headers:
     RateLimitLimit:
       description: Nombre de requêtes autorisées par fenêtre de temps
@@ -4764,11 +4764,11 @@ components:
           example: PRIMEGW7
     IntegerSchema1:
       type: integer
-    '#ComponentsParametersPageparam':
+    PageParam:
       type: integer
       minimum: 1
       default: 1
-    '#ComponentsParametersLimitparam':
+    LimitParam:
       type: integer
       minimum: 1
       maximum: 100

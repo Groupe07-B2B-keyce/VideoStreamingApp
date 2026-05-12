@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Inscription')}"></head>
+<body style="display: flex; align-items: center; justify-content: center; height: 100vh; background: var(--yt-bg);">
+    <div class="auth-card" style="background: var(--yt-surface); padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center;">
+        <i class="fas fa-play-circle" style="font-size: 48px; color: var(--yt-accent); margin-bottom: 24px;"></i>
+        <h1 style="margin-bottom: 8px;">Créer un compte</h1>
+        <p style="color: var(--yt-text-secondary); margin-bottom: 32px;">Commencez votre essai gratuit aujourd'hui</p>
+        
+        <form id="register-form">
+            <div style="margin-bottom: 16px; text-align: left;">
+                <input type="text" placeholder="Nom complet" style="width: 100%; padding: 12px; background: var(--yt-bg); border: 1px solid var(--yt-border); color: var(--yt-text-primary); border-radius: 8px; outline: none;">
+            </div>
+            <div style="margin-bottom: 16px; text-align: left;">
+                <input type="email" placeholder="Email" style="width: 100%; padding: 12px; background: var(--yt-bg); border: 1px solid var(--yt-border); color: var(--yt-text-primary); border-radius: 8px; outline: none;">
+            </div>
+            <div style="margin-bottom: 24px; text-align: left;">
+                <input type="password" placeholder="Mot de passe" style="width: 100%; padding: 12px; background: var(--yt-bg); border: 1px solid var(--yt-border); color: var(--yt-text-primary); border-radius: 8px; outline: none;">
+            </div>
+            <button type="button" class="yt-btn" style="width: 100%; background: var(--yt-accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold;" onclick="alert('Inscription réussie !')">S'inscrire</button>
+        </form>
+        
+        <p style="margin-top: 24px; font-size: 14px;">Déjà membre ? <a href="/login" style="color: var(--yt-accent); text-decoration: none;">Se connecter</a></p>
+    </div>
+</body>
+</html>
