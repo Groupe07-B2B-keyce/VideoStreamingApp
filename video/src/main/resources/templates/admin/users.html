@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion Utilisateurs | Admin</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+  <header class="header">
+    <a class="logo" th:href="@{/}"><span class="logo-text">ADMIN <span>Transmission</span></span></a>
+  </header>
+  <div class="body-layout">
+    <nav class="sidebar">
+      <div class="nav-section">
+        <a class="nav-item" th:href="@{/admin/dashboard}"><span>Dashboard</span></a>
+        <a class="nav-item active" th:href="@{/admin/utilisateurs}"><span>Utilisateurs</span></a>
+      </div>
+    </nav>
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Gestion des Utilisateurs</h1>
+        <p class="page-subtitle">Modérer les comptes et les profils.</p>
+      </div>
+      <div class="empty-state">
+        <div class="empty-title">Module en cours de développement</div>
+        <p class="empty-desc">L'interface de gestion des utilisateurs sera disponible prochainement.</p>
+      </div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

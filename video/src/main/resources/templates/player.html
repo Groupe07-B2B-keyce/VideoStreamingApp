@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="'Lecture : ' + ${title.originalTitle} + ' | Keyce Transmission'">Lecture | Keyce Transmission</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+  <style>
+    body { background: #000; overflow: hidden; margin: 0; }
+    .player-container {
+      position: relative; width: 100vw; height: 100vh;
+      background: #000; display: flex; align-items: center; justify-content: center;
+      cursor: none;
+    }
+    .player-container.show-ui { cursor: default; }
+    .video-mock {
+      width: 100%; height: 100%; object-fit: cover;
+      opacity: 0.4; filter: blur(20px);
+      transition: opacity 1s;
+    }
+    .player-overlay {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      justify-content: space-between; padding: 24px;
+      background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .player-container.show-ui .player-overlay { opacity: 1; }
+    .top-controls { display: flex; align-items: center; gap: 16px; }
+    .btn-back {
+      width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; background: rgba(255,255,255,0.1); color: #fff;
+      text-decoration: none; transition: background 0.2s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.2); }
+    .video-title { color: #fff; font-size: 20px; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .bottom-controls { width: 100%; }
+    .progress-area { width: 100%; height: 20px; display: flex; align-items: center; cursor: pointer; margin-bottom: 8px; }
+    .progress-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; position: relative; }
+    .progress-buffer { position: absolute; left: 0; top: 0; height: 100%; background: rgba(255,255,255,0.3); border-radius: 2px; transition: width 0.5s; }
+    .progress-current { position: absolute; left: 0; top: 0; height: 100%; background: var(--yellow); border-radius: 2px; }
+    .progress-handle {
+      position: absolute; right: -6px; top: -5px; width: 14px; height: 14px;
+      background: var(--yellow); border-radius: 50%; box-shadow: 0 0 10px rgba(255,208,0,0.5);
+      transform: scale(0); transition: transform 0.2s;
+    }
+    .progress-area:hover .progress-handle { transform: scale(1); }
+    .progress-area:hover .progress-bar-bg { height: 6px; }
+    .control-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .left-btns, .right-btns { display: flex; align-items: center; gap: 24px; }
+    .ctrl-btn { background: none; border: none; color: #fff; cursor: pointer; padding: 4px; opacity: 0.9; transition: opacity 0.2s, transform 0.1s; }
+    .ctrl-btn:hover { opacity: 1; transform: scale(1.1); }
+    .ctrl-btn svg { width: 28px; height: 28px; fill: currentColor; }
+    .time-display { color: #fff; font-size: 13px; font-weight: 400; opacity: 0.9; }
+    .big-play-btn {
+      position: absolute; width: 80px; height: 80px; background: rgba(0,0,0,0.5);
+      border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; color: #fff; opacity: 0; transition: transform 0.3s, opacity 0.3s;
+      pointer-events: none;
+    }
+    .player-container.paused .big-play-btn { opacity: 1; transform: scale(1.2); }
+  </style>
+</head>
+<body>
+
+<div class="player-container show-ui" id="player">
+  <video th:if="${title.videoFileUrl != null}" id="main-video" th:src="${title.videoFileUrl}" style="width: 100%; height: 100%; object-fit: contain;"></video>
+  <img th:unless="${title.videoFileUrl != null}" th:src="@{/images/logo.png}" class="video-mock" alt="Vidéo indisponible">
+
+  <div class="big-play-btn">
+    <svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:currentColor;"><path d="M8 5v14l11-7z"/></svg>
+  </div>
+
+  <div class="player-overlay">
+    <div class="top-controls">
+      <a th:href="@{/titres/{id}(id=${title.id})}" class="btn-back">
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </a>
+      <div class="video-title" th:text="${title.originalTitle}">Titre de la vidéo</div>
+    </div>
+
+    <div class="bottom-controls">
+      <div class="progress-area" id="progress-area">
+        <div class="progress-bar-bg">
+          <div class="progress-buffer" id="buffer-bar" style="width: 0%"></div>
+          <div class="progress-current" id="progress-bar" style="width: 0%">
+            <div class="progress-handle"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="left-btns">
+          <button class="ctrl-btn" id="play-pause">
+            <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
+            <svg viewBox="0 0 24 24" id="pause-icon" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="ctrl-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          </button>
+          <div class="time-display"><span id="curr-time">0:00</span> / <span id="dur-time">1:42:15</span></div>
+        </div>
+
+        <div class="right-btns">
+          <button class="ctrl-btn"><svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2V7h-2v2z"/></svg></button>
+          <button class="ctrl-btn"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"/></svg></button>
+          <button class="ctrl-btn"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const player = document.getElementById('player');
+  const progressBar = document.getElementById('progress-bar');
+  const bufferBar = document.getElementById('buffer-bar');
+  const playPauseBtn = document.getElementById('play-pause');
+  const playIcon = document.getElementById('play-icon');
+  const pauseIcon = document.getElementById('pause-icon');
+  const currTimeEl = document.getElementById('curr-time');
+
+  const video = document.getElementById('main-video');
+  const durTimeEl = document.getElementById('dur-time');
+
+  let isPlaying = false;
+  let durationSeconds = 0;
+
+  // Initialize from actual video if available
+  if (video) {
+    video.addEventListener('loadedmetadata', () => {
+      durationSeconds = video.duration;
+      updateTimeDisplay(durTimeEl, durationSeconds);
+    });
+    video.addEventListener('timeupdate', () => {
+      let progress = (video.currentTime / video.duration) * 100;
+      progressBar.style.width = progress + '%';
+      updateTimeDisplay(currTimeEl, video.currentTime);
+      
+      // Update buffer
+      if (video.buffered.length > 0) {
+        let bufferEnd = video.buffered.end(video.buffered.length - 1);
+        bufferBar.style.width = (bufferEnd / video.duration) * 100 + '%';
+      }
+    });
+    video.addEventListener('ended', () => {
+      isPlaying = false;
+      player.classList.add('paused');
+      playIcon.style.display = 'block';
+      pauseIcon.style.display = 'none';
+      showUI();
+    });
+  }
+
+  // UI Timeout
+  let uiTimeout;
+  function showUI() {
+    player.classList.add('show-ui');
+    clearTimeout(uiTimeout);
+    uiTimeout = setTimeout(() => {
+      if(isPlaying) player.classList.remove('show-ui');
+    }, 3000);
+  }
+  player.addEventListener('mousemove', showUI);
+
+  // Play/Pause
+  function togglePlay() {
+    if (video) {
+      if (video.paused) {
+        video.play();
+        isPlaying = true;
+      } else {
+        video.pause();
+        isPlaying = false;
+      }
+    } else {
+      // Simulation mode
+      isPlaying = !isPlaying;
+    }
+    player.classList.toggle('paused', !isPlaying);
+    playIcon.style.display = isPlaying ? 'none' : 'block';
+    pauseIcon.style.display = isPlaying ? 'block' : 'none';
+  }
+  
+  playPauseBtn.addEventListener('click', togglePlay);
+  if (video) {
+    video.addEventListener('click', togglePlay);
+  }
+
+  // Click to seek
+  document.getElementById('progress-area').addEventListener('click', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    let progress = (x / rect.width);
+    
+    if (video && durationSeconds > 0) {
+      video.currentTime = progress * durationSeconds;
+    } else {
+      // Simulation mode
+      progressBar.style.width = (progress * 100) + '%';
+    }
+  });
+
+  function updateTimeDisplay(element, seconds) {
+    if(isNaN(seconds)) return;
+    let currentSec = Math.floor(seconds);
+    let h = Math.floor(currentSec / 3600);
+    let m = Math.floor((currentSec % 3600) / 60);
+    let s = currentSec % 60;
+    element.textContent = (h > 0 ? h + ":" : "") + (m < 10 && h > 0 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon compte | Keyce Transmission</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+</head>
+<body>
+<div class="app-shell">
+  <header class="header">
+    <a class="logo" th:href="@{/}"><img class="logo-img" th:src="@{/images/logo.png}" alt="Logo">
+      <span class="logo-text">KEYCE <span>Transmission</span></span></a>
+    <div class="header-right">
+      <a th:href="@{/deconnexion}" class="btn-signin" style="color:#ff6b6b;border-color:#ff6b6b;">
+        <svg viewBox="0 0 24 24" style="fill:#ff6b6b;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        Déconnexion
+      </a>
+    </div>
+  </header>
+  <div class="body-layout">
+    <nav class="sidebar">
+      <div class="nav-section">
+        <a class="nav-item" th:href="@{/}"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Accueil</span></a>
+        <a class="nav-item active" th:href="@{/mon-compte}"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Mon compte</span></a>
+        <a class="nav-item" th:href="@{/parametres}"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Paramètres</span></a>
+      </div>
+    </nav>
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Mon compte</h1>
+        <p class="page-subtitle">Gérez vos informations personnelles</p>
+      </div>
+      <div style="max-width:600px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:32px;margin-bottom:20px;">
+          <h2 style="font-size:18px;font-weight:500;margin-bottom:24px;display:flex;align-items:center;gap:8px;">
+            <svg style="width:20px;height:20px;fill:var(--yellow);" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Informations personnelles
+          </h2>
+          <form th:action="@{/mon-compte}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input class="form-input" type="email" name="email" placeholder="votre@email.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pays</label>
+              <input class="form-input" type="text" name="country" placeholder="France">
+            </div>
+            <button type="submit" class="btn-primary" style="width:auto;padding:0 24px;">
+              Enregistrer les modifications
+            </button>
+          </form>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(255,0,0,0.2);border-radius:12px;padding:32px;">
+          <h2 style="font-size:18px;font-weight:500;color:#ff6b6b;margin-bottom:16px;">Zone de danger</h2>
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">La suppression de votre compte est irréversible.</p>
+          <a th:href="@{/deconnexion}" style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 20px;background:transparent;border:1px solid #ff6b6b;border-radius:8px;color:#ff6b6b;font-size:14px;font-weight:500;text-decoration:none;transition:background 0.15s;">
+            <svg style="width:18px;height:18px;fill:currentColor;" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+            Se déconnecter
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

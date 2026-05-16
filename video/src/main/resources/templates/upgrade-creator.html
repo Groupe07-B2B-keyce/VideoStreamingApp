@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Devenir Créateur | Keyce Transmission</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+</head>
+<body class="auth-page">
+  <div class="auth-card" style="max-width: 500px;">
+    <div class="auth-logo">
+      <img class="logo-img" th:src="@{/images/logo.png}" alt="Logo">
+      <span class="logo-text">PRO <span>Transmission</span></span>
+    </div>
+    <h1 class="auth-title">Passez au mode Créateur</h1>
+    <p class="auth-subtitle">Partagez vos films, séries et clips avec toute l'Afrique.</p>
+
+    <form th:action="@{/devenir-createur}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      
+      <div class="form-group">
+        <label class="form-label">Nom d'artiste / Studio *</label>
+        <input class="form-input" type="text" name="displayName" placeholder="Ex: Studio 237, Nollywood King..." required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Bio (Présentez votre travail) *</label>
+        <textarea class="form-input" name="bio" rows="4" style="height:auto;padding:10px;resize:vertical;" placeholder="Parlez-nous de vos productions..." required></textarea>
+      </div>
+
+      <div style="background: rgba(255,208,0,0.1); border: 1px solid var(--yellow); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-primary);">
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--yellow);vertical-align:middle;margin-right:8px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        En devenant créateur, vous pourrez uploader vos propres vidéos et gérer votre communauté d'abonnés.
+      </div>
+
+      <button type="submit" class="btn-primary">Confirmer mon passage en mode PRO</button>
+      
+      <div class="auth-footer">
+        <a th:href="@{/mon-compte}">Annuler et retourner au profil</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

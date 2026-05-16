@@ -4,43 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title} + ' - Prime Video'">Prime Video</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script>
-        (function() {
-            const saved = localStorage.getItem('prime-theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', saved);
-        })();
-    </script>
 </head>
 <body>
     <header th:fragment="header" class="app-header">
         <div class="header-left">
-            <button class="menu-btn" id="sidebar-toggle-btn"><i class="fas fa-bars"></i></button>
             <a href="/" class="logo">
                 <i class="fas fa-play-circle logo-icon"></i>
-                Prime<span style="font-weight: 400; font-size: 18px; margin-left: 2px;">Video</span>
+                Prime Video
             </a>
         </div>
         <div class="header-center">
             <div class="search-container">
                 <div class="search-box">
-                    <input type="text" id="search-input" placeholder="Rechercher des films, séries..." onkeyup="handleSearch(event)">
+                    <input type="text" id="search-input" placeholder="Rechercher des titres, genres..." onkeyup="handleSearch(event)">
                     <i class="fas fa-search search-icon"></i>
                 </div>
-                <button class="yt-btn mic-btn" title="Recherche vocale" onclick="startVoiceSearch()">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                <label for="image-search-input" class="yt-btn camera-btn" title="Rechercher par image">
-                    <i class="fas fa-camera"></i>
-                </label>
-                <input type="file" id="image-search-input" style="display: none;" accept="image/*" onchange="handleImageSearch(this)">
             </div>
         </div>
         <div class="header-right">
-            <button class="menu-btn" onclick="toggleTheme()"><i class="fas fa-moon" id="theme-icon"></i></button>
-            <button class="menu-btn"><i class="fas fa-bell"></i></button>
+            <button class="nav-icon-btn"><i class="fas fa-bell"></i></button>
             <div class="user-profile" onclick="location.href='/login'">
                 <i class="fas fa-user-circle"></i>
             </div>
@@ -67,45 +52,34 @@
                     <span>Séries</span>
                 </a>
             </li>
-            <li style="margin: 12px 0; border-top: 1px solid var(--yt-border);"></li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-plus nav-icon"></i>
+                    <span>Ma liste</span>
+                </a>
+            </li>
+            <li style="margin: 24px 0; border-top: 1px solid var(--glass-border);"></li>
             <li class="nav-item">
                 <a href="/swagger-ui.html" target="_blank" class="nav-link">
                     <i class="fas fa-code nav-icon"></i>
-                    <span>API Documentation</span>
+                    <span>API Docs</span>
                 </a>
             </li>
         </ul>
     </aside>
 
     <script th:fragment="scripts">
-        function toggleTheme() {
-            const html = document.documentElement;
-            const current = html.getAttribute('data-theme') || 'dark';
-            const next = current === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', next);
-            localStorage.setItem('prime-theme', next);
-            updateThemeIcon(next);
+        function handleSearch(event) {
+            const query = event.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                card.style.display = title.includes(query) ? '' : 'none';
+            });
         }
-
-        function updateThemeIcon(theme) {
-            const icon = document.getElementById('theme-icon');
-            if (!icon) return;
-            icon.className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.getElementById('sidebar-toggle-btn');
-            if (toggleBtn && sidebar) {
-                toggleBtn.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-            }
-            updateThemeIcon(localStorage.getItem('prime-theme') || 'dark');
-        });
 
         function showToast(msg) {
-            // Simple toast implementation
             console.log("Toast:", msg);
-            alert(msg);
         }
     </script>
 </body>
