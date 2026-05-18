@@ -33,6 +33,12 @@
       Déconnexion réussie
     </div>
 
+
+    <!-- Success (registration) -->
+    <div class="alert alert-success" th:if="${param.registered}">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+      Compte cree avec succes. Vous pouvez maintenant vous connecter.
+    </div>
     <!-- Form -->
     <form th:action="@{/connexion}" method="post" id="login-form">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

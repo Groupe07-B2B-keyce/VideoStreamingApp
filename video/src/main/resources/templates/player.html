@@ -64,7 +64,7 @@
 <body>
 
 <div class="player-container show-ui" id="player">
-  <video th:if="${title.videoFileUrl != null}" id="main-video" th:src="${title.videoFileUrl}" style="width: 100%; height: 100%; object-fit: contain;"></video>
+  <video th:if="${title.videoFileUrl != null}" id="main-video" th:src="${title.videoFileUrl}" preload="metadata" playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
   <img th:unless="${title.videoFileUrl != null}" th:src="@{/images/logo.png}" class="video-mock" alt="Vidéo indisponible">
 
   <div class="big-play-btn">

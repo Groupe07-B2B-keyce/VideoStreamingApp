@@ -1,0 +1,335 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------------< prime:video >-----------------------------
+[INFO] Building video 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.14:run (default-cli) > test-compile @ video >>>
+[INFO] 
+[INFO] --- openapi-generator:7.3.0:generate (default) @ video ---
+[INFO] Generating with dryRun=false
+[INFO] No .openapi-generator-ignore file found.
+[INFO] OpenAPI Generator: spring (server)
+[INFO] Generator 'spring' is considered stable.
+[INFO] ----------------------------------
+[INFO] Environment variable JAVA_POST_PROCESS_FILE not defined so the Java code may not be properly formatted. To define it, try 'export JAVA_POST_PROCESS_FILE="/usr/local/bin/clang-format -i"' (Linux/Mac)
+[INFO] NOTE: To enable file post-processing, 'enablePostProcessFile' must be set to `true` (--enable-post-process-file for CLI).
+[INFO] Invoker Package Name, originally not set, is now derived from api package name: prime.video
+[INFO] Inline schema created as ValidationError_allOf_errors. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings ValidationError_allOf_errors=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings ValidationError_allOf_errors=NewModel,ModelA=NewModelA in CLI).
+[INFO] Inline schema created as SubmitTitleRequest_castingData_inner. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings SubmitTitleRequest_castingData_inner=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings SubmitTitleRequest_castingData_inner=NewModel,ModelA=NewModelA in CLI).
+[INFO] Inline schema created as TitleAnalytics_period. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings TitleAnalytics_period=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings TitleAnalytics_period=NewModel,ModelA=NewModelA in CLI).
+[INFO] Inline schema created as TitleAnalytics_topCountries_inner. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings TitleAnalytics_topCountries_inner=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings TitleAnalytics_topCountries_inner=NewModel,ModelA=NewModelA in CLI).
+[INFO] Inline schema created as PaginatedResponse_meta. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings PaginatedResponse_meta=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings PaginatedResponse_meta=NewModel,ModelA=NewModelA in CLI).
+[INFO] Inline schema created as PlaybackToken_subtitleTracks_inner. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings PlaybackToken_subtitleTracks_inner=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings PlaybackToken_subtitleTracks_inner=NewModel,ModelA=NewModelA in CLI).
+[INFO] Inline schema created as PlaybackToken_audioTracks_inner. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings PlaybackToken_audioTracks_inner=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings PlaybackToken_audioTracks_inner=NewModel,ModelA=NewModelA in CLI).
+[INFO] Inline schema created as ReviewSummary_ratingDistribution. To have complete control of the model name, set the `title` field or use the modelNameMapping option (e.g. --model-name-mappings ReviewSummary_ratingDistribution=NewModel,ModelA=NewModelA in CLI) or inlineSchemaNameMapping option (--inline-schema-name-mappings ReviewSummary_ratingDistribution=NewModel,ModelA=NewModelA in CLI).
+[INFO] Processing operation listPartnerTitles
+[INFO] Processing operation submitTitle
+[INFO] Processing operation getIngestionJob
+[INFO] Processing operation getPartnerTitleAnalytics
+[INFO] Processing operation getIngestionQueue
+[INFO] Processing operation updateIngestionStatus
+[INFO] Processing operation listTitleLicenses
+[INFO] Processing operation createLicense
+[INFO] Processing operation getGlobalStats
+[INFO] Processing operation listTitles
+[INFO] Processing operation getTitleById
+[INFO] Processing operation getTitleCasting
+[INFO] Processing operation listSeasonsByTitle
+[INFO] Processing operation listEpisodesBySeason
+[INFO] Processing operation listGenres
+[INFO] Processing operation listCollections
+[INFO] Processing operation listTitlesByCollection
+[INFO] Processing operation registerAccount
+[INFO] Processing operation login
+[INFO] Processing operation refreshToken
+[INFO] Processing operation logout
+[INFO] Processing operation getMyAccount
+[INFO] Processing operation listProfiles
+[INFO] Processing operation createProfile
+[INFO] Processing operation getProfileById
+[INFO] Processing operation deleteProfile
+[INFO] Processing operation updateProfile
+[INFO] Processing operation setParentalPin
+[INFO] Processing operation listDevices
+[INFO] Processing operation revokeDevice
+[INFO] Processing operation startPlayback
+[INFO] Processing operation getWatchHistory
+[INFO] Processing operation getProgressForTitle
+[INFO] Processing operation updateWatchProgress
+[INFO] Processing operation deleteWatchProgress
+[INFO] Processing operation getXRayAtTimestamp
+[INFO] Processing operation createTimelineEvent
+[INFO] Processing operation getWatchlist
+[INFO] Processing operation addToWatchlist
+[INFO] Processing operation removeFromWatchlist
+[INFO] Processing operation listReviews
+[INFO] Processing operation createReview
+[INFO] Processing operation deleteReview
+[INFO] Processing operation updateReview
+[INFO] Processing operation getRecommendations
+[INFO] Processing operation createGroupWatchSession
+[INFO] Processing operation getGroupWatchSession
+[INFO] Processing operation joinGroupWatchSession
+[INFO] Processing operation controlGroupWatch
+[INFO] Processing operation leaveGroupWatchSession
+[INFO] Processing operation processVoiceCommand
+[INFO] Model GetAdminTitlesTitleidLicenses200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] Model GetTitlesTitleidCasting200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] Model GetTitlesTitleidSeasons200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] Model GetTitlesTitleidSeasonsSeasonnumberEpisodes200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] Model GetGenres200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] Model GetAccountsMeProfiles200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] Model GetAccountsMeDevices200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] Model GetTitlesTitleidXray200Response not generated since it's an alias to array (without property) and `generateAliasAsModel` is set to false (default)
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\AccessInfo.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Account.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\AccountSummary.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\AddToWatchlistRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\BaseEntity.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\CastingMember.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Collection.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\CreateGroupWatchRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\CreateLicenseRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\CreateProfileRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\CreateReviewRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Device.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Episode.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Genre.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetAdminIngestionQueue200Response.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetCollections200Response.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetCollectionsCollectionidTitles200Response.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetCollectionsTypeParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetPartnerTitles200Response.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetPartnerTitlesStatusParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetProfilesProfileidRecommendationsReasonParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetProfilesProfileidWatchProgress200Response.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetProfilesProfileidWatchProgressStatusParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetTitles200Response.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetTitlesAccesstypeParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetTitlesRatingParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetTitlesSortParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GetTitlesTypeParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GlobalPlatformStats.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GroupWatchControlRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GroupWatchParticipant.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\GroupWatchSession.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\IngestionJob.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\License.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\LoginRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\MediaIngestionStatus.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PaginatedResponse.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PaginatedResponseMeta.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Pagination.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PartnerAccount.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Person.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PlaybackToken.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PlaybackTokenAudioTracksInner.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PlaybackTokenSubtitleTracksInner.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PostAdminTitlesTitleidXrayRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\PostGroupwatchSessionidJoinRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\ProblemDetails.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Profile.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\ProfileSummary.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Recommendation.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\RecommendationPage.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\RefreshTokenRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\RegisterRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Review.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\ReviewPage.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\ReviewSummary.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\ReviewSummaryRatingDistribution.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Season.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\SetParentalPinRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\StartPlaybackRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\SubmitTitleRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\SubmitTitleRequestCastingDataInner.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TechnicalDetails.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TimelineEvent.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TimelineEventType.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\Title.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TitleAnalytics.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TitleAnalyticsPeriod.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TitleAnalyticsTopCountriesInner.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TitleSummary.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TitlesTitleidReviewsSortParameter.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\TokenResponse.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\UpdateIngestionStatusRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\UpdateProfileRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\UpdateWatchProgressRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\ValidationError.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\ValidationErrorAllOfErrors.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\VoiceCommandRequest.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\VoiceCommandResponse.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\WatchHistory.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\WatchSession.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\WatchlistItem.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\model\WatchlistPage.java
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[WARNING] Ignoring complex example on request body
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AccountsApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AccountsApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AccountsApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AdminApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AdminApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AdminApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AuthenticationApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AuthenticationApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\AuthenticationApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\CatalogApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\CatalogApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\CatalogApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\CollectionsApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\CollectionsApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\CollectionsApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\DevicesApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\DevicesApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\DevicesApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\GenresApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\GenresApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\GenresApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\GroupWatchApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\GroupWatchApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\GroupWatchApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\PartnerApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\PartnerApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\PartnerApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\PlaybackApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\PlaybackApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\PlaybackApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\ProfilesApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\ProfilesApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\ProfilesApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\RecommendationsApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\RecommendationsApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\RecommendationsApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\ReviewsApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\ReviewsApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\ReviewsApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\VoiceAssistantApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\VoiceAssistantApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\VoiceAssistantApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\WatchProgressApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\WatchProgressApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\WatchProgressApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\WatchlistApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\WatchlistApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\WatchlistApiDelegate.java
+[INFO] Implementation file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\XRayApiController.java is not overwritten
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\XRayApi.java
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\XRayApiDelegate.java
+[INFO] Skipping generation of Webhooks.
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\pom.xml (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\README.md (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\org\openapitools\OpenApiGeneratorApplication.java (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\test\java\org\openapitools\OpenApiGeneratorApplicationTests.java (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\org\openapitools\RFC3339DateFormat.java (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\org\openapitools\configuration\EnumConverterConfiguration.java (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\resources\application.properties (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\org\openapitools\configuration\HomeController.java (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\resources\openapi.yaml (Skipped by supportingFiles options supplied by user.)
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\org\openapitools\configuration\SpringDocConfiguration.java (Skipped by supportingFiles options supplied by user.)
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\src\main\java\prime\video\api\ApiUtil.java
+[INFO] Skipped C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\.openapi-generator-ignore (Skipped by supportingFiles options supplied by user.)
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\.openapi-generator\VERSION
+[INFO] writing file C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\generated-sources\openapi\.openapi-generator\FILES
+################################################################################
+# Thanks for using OpenAPI Generator.                                          #
+# Please consider donation to help us maintain this project ?                 #
+# https://opencollective.com/openapi_generator/donate                          #
+################################################################################
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ video ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 22 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ video ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 186 source files with javac [debug parameters release 25] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ video ---
+[INFO] skip non existing resourceDirectory C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ video ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.5.14:run (default-cli) < test-compile @ video <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.14:run (default-cli) @ video ---
+[INFO] Attaching agents: []
+###################################################
+Starting VideoApplication...
+Working Directory: C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video
+###################################################
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.14)
+
+2026-05-17T14:56:06.283+02:00  INFO 7760 --- [           main] prime.video.VideoApplication             : Starting VideoApplication using Java 26.0.1 with PID 7760 (C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video\target\classes started by baill in C:\Users\baill\Documents\Codex\2026-05-16\files-mentioned-by-the-user-nouveau\extracted\Nouveau dossier\VideoStreamingApp\video)
+2026-05-17T14:56:06.320+02:00  INFO 7760 --- [           main] prime.video.VideoApplication             : No active profile set, falling back to 1 default profile: "default"
+2026-05-17T14:56:26.124+02:00  INFO 7760 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-17T14:56:26.780+02:00  INFO 7760 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 631 ms. Found 7 JPA repository interfaces.
+2026-05-17T14:56:29.878+02:00  INFO 7760 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8071 (http)
+2026-05-17T14:56:29.928+02:00  INFO 7760 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-05-17T14:56:29.929+02:00  INFO 7760 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.54]
+2026-05-17T14:56:30.428+02:00  INFO 7760 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-05-17T14:56:30.429+02:00  INFO 7760 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 23221 ms
+2026-05-17T14:56:30.843+02:00  INFO 7760 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-17T14:56:31.513+02:00  INFO 7760 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@291a4791
+2026-05-17T14:56:31.517+02:00  INFO 7760 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-17T14:56:31.922+02:00  INFO 7760 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-05-17T14:56:32.345+02:00  INFO 7760 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.49.Final
+2026-05-17T14:56:32.475+02:00  INFO 7760 --- [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-05-17T14:56:34.344+02:00  INFO 7760 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-17T14:56:34.691+02:00  INFO 7760 --- [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 3.46
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-17T14:56:38.032+02:00  INFO 7760 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-17T14:56:38.175+02:00  INFO 7760 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-17T14:56:40.666+02:00  WARN 7760 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-17T14:56:40.774+02:00  INFO 7760 --- [           main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page template: index
+2026-05-17T14:56:41.821+02:00  INFO 7760 --- [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2026-05-17T14:56:44.391+02:00  INFO 7760 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8071 (http) with context path '/'
+2026-05-17T14:56:44.409+02:00  INFO 7760 --- [           main] prime.video.VideoApplication             : Started VideoApplication in 44.078 seconds (process running for 47.694)
+2026-05-17T14:56:45.398+02:00  INFO 7760 --- [nio-8071-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-17T14:56:45.399+02:00  INFO 7760 --- [nio-8071-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-05-17T14:56:45.403+02:00  INFO 7760 --- [nio-8071-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  03:46 min
+[INFO] Finished at: 2026-05-17T14:58:36+02:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.14:run (default-cli) on project video: Process terminated with exit code: -1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

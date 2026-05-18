@@ -3,236 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Keyce Transmission - Regardez les meilleurs films et séries en streaming">
-  <title th:text="${pageTitle != null ? pageTitle + ' | Keyce Transmission' : 'Keyce Transmission - Streaming'}">Keyce Transmission</title>
+  <meta name="description" content="Keyce Transmission - Films et series en streaming">
+  <title>Keyce Transmission | Streaming</title>
   <link rel="stylesheet" th:href="@{/css/style.css}">
   <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
 </head>
 <body>
 <div class="app-shell">
-
-  <!-- ── Header ── -->
   <header class="header">
-    <button class="btn-icon" aria-label="Menu">
-      <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-    </button>
-
-    <a class="logo" th:href="@{/}">
-      <img class="logo-img" th:src="@{/images/logo.png}" alt="Keyce Transmission Logo">
-      <span class="logo-text">KEYCE <span>Transmission</span></span>
-    </a>
-
-    <form class="search-form" th:action="@{/search}" method="get">
-      <div class="search-input-wrap">
-        <input class="search-input" type="text" name="q" th:value="${query}" placeholder="Rechercher des films, séries, acteurs..." id="search-q">
-      </div>
-      <button type="submit" class="btn-search" aria-label="Rechercher">
-        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      </button>
+    <a class="logo" th:href="@{/}"><img class="logo-img" th:src="@{/images/logo.png}" alt="Keyce Transmission"><span class="logo-text">KEYCE <span>Transmission</span></span></a>
+    <form class="search-form" th:action="@{/recherche}" method="get">
+      <div class="search-input-wrap"><input class="search-input" type="text" name="q" placeholder="Rechercher films, series, acteurs..."></div>
+      <button type="submit" class="btn-search" aria-label="Rechercher"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
     </form>
-
     <div class="header-right">
-      <th:block sec:authorize="isAuthenticated()">
-        <button class="btn-icon" title="Notifications">
-          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-        </button>
-        <a th:href="@{/mon-compte}" class="btn-icon" title="Mon compte">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </a>
-      </th:block>
-      <th:block sec:authorize="!isAuthenticated()">
-        <a th:href="@{/connexion}" class="btn-signin">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          Connexion
-        </a>
-      </th:block>
+      <a th:href="@{/connexion}" class="btn-signin" sec:authorize="!isAuthenticated()">Connexion</a>
+      <a th:href="@{/profils}" class="btn-icon" sec:authorize="isAuthenticated()" title="Profils"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></a>
     </div>
   </header>
 
-  <!-- ── Body ── -->
   <div class="body-layout">
-
-    <!-- Sidebar -->
     <nav class="sidebar" aria-label="Navigation principale">
       <div class="nav-section">
-        <a class="nav-item" th:classappend="${activeMenu == 'home' ? ' active' : ''}" th:href="@{/}">
-          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          <span>Accueil</span>
-        </a>
-        <a class="nav-item" th:classappend="${activeMenu == 'shorts' ? ' active' : ''}" th:href="@{/tendances}">
-          <svg viewBox="0 0 24 24"><path d="M11 4H5C3.9 4 3 4.9 3 6v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-6l-2-2v8H5V6h6V4zm7.3-.12l1.83 1.83L13 12.83V14h-1.17l-6.07 6.07-1.83-1.83L10 12.17V11h1.17L18.3 3.88zM14 4l4 4-1 1-4-4z"/></svg>
-          <span>Tendances</span>
-        </a>
-        <a class="nav-item" th:classappend="${activeMenu == 'subscriptions' ? ' active' : ''}" th:href="@{/ma-liste}">
-          <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
-          <span>Ma liste</span>
-        </a>
-      </div>
-
-      <div class="nav-divider"></div>
-
-      <div class="nav-section">
-        <span class="nav-section-title">Catalogue</span>
-        <a class="nav-item" th:classappend="${activeMenu == 'movies' ? ' active' : ''}" th:href="@{/films}">
-          <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
-          <span>Films</span>
-        </a>
-        <a class="nav-item" th:classappend="${activeMenu == 'series' ? ' active' : ''}" th:href="@{/series}">
-          <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
-          <span>Séries</span>
-        </a>
-        <a class="nav-item" th:classappend="${activeMenu == 'genres' ? ' active' : ''}" th:href="@{/genres}">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-          <span>Genres</span>
-        </a>
-      </div>
-
-      <div class="nav-divider"></div>
-
-      <div class="nav-section">
-        <span class="nav-section-title">Mon espace</span>
-        <a class="nav-item" th:classappend="${activeMenu == 'watchlist' ? ' active' : ''}" th:href="@{/ma-liste}">
-          <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-          <span>À regarder</span>
-        </a>
-        <a class="nav-item" th:classappend="${activeMenu == 'history' ? ' active' : ''}" th:href="@{/historique}">
-          <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V1l4 4-4 4V3zM12 8v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
-          <span>Historique</span>
-        </a>
-        <a class="nav-item" th:classappend="${activeMenu == 'profile' ? ' active' : ''}" th:href="@{/profils}">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          <span>Profils</span>
-        </a>
-      </div>
-
-      <div class="nav-divider"></div>
-
-      <div class="nav-section">
-        <span class="nav-section-title">Paramètres</span>
-        <a class="nav-item" th:href="@{/parametres}">
-          <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
-          <span>Paramètres</span>
-        </a>
+        <a class="nav-item active" th:href="@{/}"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Accueil</span></a>
+        <a class="nav-item" th:href="@{/films}"><svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg><span>Films</span></a>
+        <a class="nav-item" th:href="@{/series}"><svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg><span>Series</span></a>
+        <a class="nav-item" th:href="@{/tendances}"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Tendances</span></a>
+        <a class="nav-item" th:href="@{/profils}" sec:authorize="isAuthenticated()"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profils</span></a>
       </div>
     </nav>
 
-    <!-- Main -->
     <main class="main-content">
-
-      <!-- Hero Banner -->
-      <div class="hero" th:if="${featured != null}">
-        <img class="hero-bg" th:src="${featured.posterUrl}" alt="" aria-hidden="true">
-        <div class="hero-gradient"></div>
-        <div class="hero-content">
-          <span class="hero-badge">
-            <svg style="width:12px;height:12px;fill:#000;" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            À la une
-          </span>
-          <h1 class="hero-title" th:text="${featured.originalTitle}">Titre du film</h1>
-          <p class="hero-desc" th:text="${featured.synopsis}">Description du contenu...</p>
-          <div class="hero-actions">
-            <a th:href="@{/titres/{id}(id=${featured.id})}" class="btn-hero-play">
-              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              Regarder
-            </a>
-            <a th:href="@{/titres/{id}(id=${featured.id})}" class="btn-hero-info">
-              <svg viewBox="0 0 24 24"><path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2V7h-2v2z"/></svg>
-              Plus d'infos
-            </a>
+      <section class="welcome-prime">
+        <img class="welcome-bg" th:if="${featured != null && featured.backdropUrl != null}" th:src="${featured.backdropUrl}" alt="">
+        <div class="welcome-shade"></div>
+        <div class="welcome-copy">
+          <span class="welcome-kicker">Bienvenue sur</span>
+          <h1>Keyce Transmission</h1>
+          <p>Films, documentaires et histoires africaines reunis dans une experience de streaming simple, rapide et immersive.</p>
+          <div class="welcome-actions">
+            <a th:href="@{/films}" class="btn-hero-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Regarder maintenant</a>
+            <a th:href="@{/inscription}" class="btn-hero-info" sec:authorize="!isAuthenticated()">Creer un compte</a>
+            <a th:href="@{/profils}" class="btn-hero-info" sec:authorize="isAuthenticated()">Choisir un profil</a>
           </div>
+        </div>
+      </section>
+
+      <section class="featured-strip" th:if="${featured != null}">
+        <div class="featured-poster"><img th:if="${featured.posterUrl != null}" th:src="${featured.posterUrl}" th:alt="${featured.originalTitle}"></div>
+        <div class="featured-info">
+          <span>A la une</span>
+          <h2 th:text="${featured.originalTitle}">Titre</h2>
+          <p th:text="${featured.synopsis}">Description</p>
+          <div class="hero-actions"><a class="btn-hero-play" th:href="@{/lecture/{id}(id=${featured.id})}">Lecture</a><a class="btn-hero-info" th:href="@{/titres/{id}(id=${featured.id})}">Details</a></div>
+        </div>
+      </section>
+
+      <div class="filter-panel">
+        <div class="filter-label">Explorer par genre</div>
+        <div class="chips-row">
+          <a class="chip" th:classappend="${selectedGenre == null ? ' active' : ''}" th:href="@{/}">Tout</a>
+          <a class="chip" th:classappend="${selectedGenre == 'action-africaine' ? ' active' : ''}" th:href="@{/(genre='action-africaine')}">Action</a>
+          <a class="chip" th:classappend="${selectedGenre == 'drame-africain' ? ' active' : ''}" th:href="@{/(genre='drame-africain')}">Drame</a>
+          <a class="chip" th:classappend="${selectedGenre == 'comedie-africaine' ? ' active' : ''}" th:href="@{/(genre='comedie-africaine')}">Comedie</a>
+          <a class="chip" th:classappend="${selectedGenre == 'documentaire-africain' ? ' active' : ''}" th:href="@{/(genre='documentaire-africain')}">Documentaire</a>
+          <a class="chip" th:classappend="${selectedGenre == 'afrobeat-clips' ? ' active' : ''}" th:href="@{/(genre='afrobeat-clips')}">Afrobeat</a>
+          <a class="chip" th:classappend="${selectedGenre == 'nollywood' ? ' active' : ''}" th:href="@{/(genre='nollywood')}">Nollywood</a>
         </div>
       </div>
 
-      <!-- Default Hero (no featured) -->
-      <div class="hero" th:unless="${featured != null}"
-           style="display:flex;align-items:center;justify-content:center;">
-        <div style="text-align:center;padding:40px;">
-          <h1 style="font-size:48px;font-weight:700;margin-bottom:12px;">
-            Bienvenue sur <span style="color:var(--yellow);">Keyce</span> Transmission
-          </h1>
-          <p style="color:var(--text-secondary);font-size:16px;margin-bottom:24px;">
-            Votre destination pour les meilleurs films et séries en streaming
-          </p>
-          <div style="display:flex;gap:12px;justify-content:center;">
-            <a th:href="@{/inscription}" class="btn-hero-play">
-              <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M8 5v14l11-7z"/></svg>
-              Commencer gratuitement
-            </a>
-            <a th:href="@{/films}" class="btn-hero-info">Explorer le catalogue</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Genre Chips -->
-      <div class="chips-row">
-        <button class="chip active" onclick="filterContent('all')">Tout</button>
-        <button class="chip" onclick="filterContent('movies')">Films</button>
-        <button class="chip" onclick="filterContent('series')">Séries</button>
-        <button class="chip" onclick="filterContent('action')">Action</button>
-        <button class="chip" onclick="filterContent('drama')">Drame</button>
-        <button class="chip" onclick="filterContent('comedy')">Comédie</button>
-        <button class="chip" onclick="filterContent('thriller')">Thriller</button>
-        <button class="chip" onclick="filterContent('scifi')">Sci-Fi</button>
-        <button class="chip" onclick="filterContent('documentary')">Documentaire</button>
-        <button class="chip" onclick="filterContent('animation')">Animation</button>
-      </div>
-
-      <!-- Content Grid -->
-      <div th:if="${titles != null and !#lists.isEmpty(titles)}">
-        <h2 class="section-title">
-          <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Recommandés pour vous
-        </h2>
-        <div class="video-grid" id="content-grid">
+      <section th:if="${titles != null and !#lists.isEmpty(titles)}">
+        <h2 class="section-title"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Recommandes pour vous</h2>
+        <div class="video-grid">
           <a class="video-card" th:each="title : ${titles}" th:href="@{/titres/{id}(id=${title.id})}">
-            <div class="card-thumbnail">
-              <img th:if="${title.posterUrl != null}" th:src="${title.posterUrl}" th:alt="${title.originalTitle}" loading="lazy">
-              <div class="card-thumb-placeholder" th:unless="${title.posterUrl != null}">
-                <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
-              </div>
-              <span class="card-type-badge" th:text="${title.type}">FILM</span>
-              <div class="card-overlay">
-                <div class="card-play-btn">
-                  <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-              </div>
-            </div>
-            <div class="card-info">
-              <div class="card-avatar">
-                <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
-              </div>
-              <div class="card-meta">
-                <div class="card-title" th:text="${title.originalTitle}">Titre</div>
-                <div class="card-sub" th:text="${title.releaseYear}">2024</div>
-                <div class="card-rating" th:if="${title.imdbRating != null}">
-                  <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  <span th:text="${title.imdbRating}">8.5</span>
-                </div>
-              </div>
-            </div>
+            <div class="card-thumbnail"><img th:if="${title.posterUrl != null}" th:src="${title.posterUrl}" th:alt="${title.originalTitle}" loading="lazy"><div class="card-thumb-placeholder" th:unless="${title.posterUrl != null}"><svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></div><span class="card-type-badge" th:text="${title.type}">FILM</span><div class="card-overlay"><div class="card-play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>
+            <div class="card-info"><div class="card-avatar"><svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg></div><div class="card-meta"><div class="card-title" th:text="${title.originalTitle}">Titre</div><div class="card-sub" th:text="${title.releaseYear}">2024</div><div class="card-rating" th:if="${title.imdbRating != null}"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span th:text="${title.imdbRating}">8.5</span></div></div></div>
           </a>
         </div>
-      </div>
+      </section>
 
-      <!-- Empty State -->
       <div class="empty-state" th:if="${titles == null or #lists.isEmpty(titles)}">
         <svg class="empty-icon" viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
-        <div class="empty-title">Le catalogue est vide</div>
-        <div class="empty-desc">Aucun contenu disponible pour le moment. Revenez bientôt !</div>
+        <div class="empty-title">Aucun contenu</div>
+        <div class="empty-desc">Aucun titre ne correspond a ce filtre.</div>
       </div>
-
     </main>
   </div>
 </div>
-
-<script>
-  // Chips filter
-  document.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', function() {
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-</script>
 </body>
 </html>

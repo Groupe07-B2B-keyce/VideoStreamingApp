@@ -107,7 +107,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<!-- Fix Java 25 : autorise SQLite à charger sa bibliothèque native -->
-					<jvmArguments>--enable-native-access=ALL-UNNAMED -Dorg.sqlite.lib.path=${project.build.directory}</jvmArguments>
+					<jvmArguments>--enable-native-access=ALL-UNNAMED</jvmArguments>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>

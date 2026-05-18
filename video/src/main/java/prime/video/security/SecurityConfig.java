@@ -107,7 +107,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/", "/films", "/series", "/genres", "/tendances",
                     "/connexion", "/inscription", "/deconnexion",
-                    "/recherche", "/titres/**",
+                    "/recherche", "/titres/**", "/lecture/**",
                     "/css/**", "/js/**", "/images/**", "/favicon.ico",
                     "/error", "/acces-refuse"
                 ).permitAll()
@@ -117,7 +117,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/profils/**", "/mon-compte/**",
                     "/ma-liste/**", "/historique/**",
-                    "/parametres/**", "/lecture/**"
+                    "/parametres/**"
                 ).authenticated()
                 .anyRequest().permitAll()
             )
